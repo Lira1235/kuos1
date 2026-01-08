@@ -16,5 +16,26 @@
         <img id="preview-img" src="" alt="您的成果照" style="display: none;">
     </div>
 </div>
+<script>
+    const imageInput = document.getElementById('imageInput');
+    const previewImg = document.getElementById('preview-img');
+    const noPhotoText = document.getElementById('no-photo');
+
+    imageInput.addEventListener('change', function() {
+        const file = this.files[0]; // 取得使用者選取的第一個檔案
+        if (file) {
+            const reader = new FileReader();
+            
+            // 當檔案讀取完成時執行
+            reader.onload = function(e) {
+                previewImg.src = e.target.result; // 將圖片路徑設定為讀取結果
+                previewImg.style.display = 'block'; // 顯示圖片
+                noPhotoText.style.display = 'none'; // 隱藏「尚未上傳」文字
+            }
+            
+            reader.readAsDataURL(file); // 讀取圖片檔案
+        }
+    });
+</script>
 </body>
 </html>
