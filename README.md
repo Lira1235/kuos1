@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html>
 <body>
     <h1>我的第一個 GitHub 網頁</h1>
