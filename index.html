@@ -12,69 +12,61 @@
             background-repeat: no-repeat;
             min-height: 100vh;
             background-color: #b22020;
-            margin: 0; /* 修正：增加 margin 確保背景滿版 */
+            margin: 0;
             padding: 10px;
-        } /* 修正：原本這裡少了一個右大括號 */
+        }
 
         h1 {
             text-align: center;
             color: #3a2301;
-            font-size: 40px; /* 手機版建議略小一點比較精緻 */
+            font-size: 40px;
             margin-top: 20px;
         }
 
-        /* 田字型容器 */
+        /* 田字型容器 - 必須保留此 class 才能並排 */
         .grid-container {
             display: grid;
-            grid-template-columns: 1fr 1fr; /* 兩欄 */
-            grid-template-rows: 1fr 1fr;  /* 修正：改為 auto，避免格子內容被裁掉 */
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
             gap: 10px;
             padding: 10px;
             max-width: 100%;
             box-sizing: border-box;
-            min-height: 400px;
+            min-height: 500px; /* 增加最小高度確保美觀 */
         }
 
-        /* 每個格子的樣式 */
         .grid-item {
-            background-color: rgba(255, 255, 255, 0.3); /* 稍微調高亮度 */
+            background-color: rgba(255, 255, 255, 0.3);
             border: 1px solid #e99e9d;
             border-radius: 12px;
-            padding: 15px;
             text-align: center;
-            color: #3a2301; /* 修正文字顏色與標題一致 */
+            color: #3a2301;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
-            align-items: center; /* 讓格子內所有元素置中 */
-            position: relative; /* 讓內部定位更準確 */
-            overflow: hidden;   /* 確保圖片不超出格子的圓角 */
+            justify-content: center;
+            align-items: center;
+            position: relative; /* 為了讓圖片絕對定位覆蓋 */
+            overflow: hidden;
+            padding: 15px; /* 預設內距 */
         }
 
-        .grid-item h3 {
-            margin-top: 0;
-            color: #3a2301;
+        /* 針對第一關特殊處理，移除內距讓圖片滿版 */
+        #stage1 {
+            padding: 0; 
         }
 
-        .grid-item p {
-            font-size: 14px;
-            line-height: 1.4;
-            margin: 5px 0;
-            color: #3a2301;
-        }
+        .grid-item h3 { margin-top: 0; color: #3a2301; }
+        .grid-item p { font-size: 14px; line-height: 1.4; color: #3a2301; }
 
-        /* 輸入框樣式優化 */
         input[type="number"] {
-            width: 100px;
+            width: 80px;
             height: 35px;
             text-align: center;
             border-radius: 8px;
             border: 1px solid #e99e9d;
-            margin-top: 10px;
-            font-size: 16px;
+            margin-top: 5px;
         }
 
-        /* 按鈕樣式優 nickname */
         .btn-check {
             margin-top: 10px;
             background-color: #e99e9d;
@@ -84,62 +76,59 @@
             border-radius: 10px;
             cursor: pointer;
             font-weight: bold;
-            transition: 0.3s;
         }
 
-        .btn-check:hover {
-            background-color: #d18a89;
-        }
-
-        #resultMsg {
-            font-size: 12px;
-            margin-top: 10px;
-            min-height: 18px;
-        }
+        #resultMsg { font-size: 12px; margin-top: 5px; min-height: 18px; }
     </style>
 </head>
 <body>
 
     <h1>製作七夕粿！</h1>  
 
-    <div class="grid-item" id="stage1" style="position: relative; padding: 0; overflow: hidden;">
+    <!-- 修正：必須使用 grid-container 包裹四個 grid-item -->
+    <div class="grid-container">
+        
         <!-- 第一關 -->
-        <div class="grid-item">
-            <h3>第一關-福氣到！</h3>
-            <p>找找畫面中一共有幾個『福』字？</p>
-            <input type="number" id="quizInput" placeholder="輸入數字">
-            <button class="btn-check" onclick="checkAnswer()">送出答案</button>
-            <p id="resultMsg"></p>
+        <div class="grid-item" id="stage1">
+            <!-- 題目內容 -->
+            <div id="quiz-content" style="padding: 15px;">
+                <h3>第一關-福氣到！</h3>
+                <p>找找畫面中一共有幾個『福』字？</p>
+                <input type="number" id="quizInput" placeholder="數字">
+                <button class="btn-check" onclick="checkAnswer()">送出答案</button>
+                <p id="resultMsg"></p>
+            </div>
+            <!-- 答對後顯示的圖片 (預設隱藏) -->
+            <div id="success-content" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+                <img src="webA工作區域 1.png" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
         </div>
-         <!-- 答對後要顯示的圖片（預設隱藏） -->
-        <div id="success-content" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
-        <img src="webA工作區域 1.png" style="width: 100%; height: 100%; object-fit: cover;">
-        </div>
-        <!-- 步驟 2 -->
+
+        <!-- 第二關 -->
         <div class="grid-item">
             <h3>第二關-功名到！</h3>
             <p>請選出代表功名順利的圖案</p>
-            <!-- 之後可以放圖片或文字 -->
         </div>
 
-        <!-- 步驟 3 -->
+        <!-- 第三關 -->
         <div class="grid-item">
             <h3>第三關</h3>
             <p>下鍋水煮</p>
         </div>
 
-        <!-- 步驟 4 -->
+        <!-- 第四關 -->
         <div class="grid-item">
             <h3>第四關</h3>
             <p>淋上糖水</p>
         </div>
+
     </div>
 
     <script>
     function checkAnswer() {
         const userAnswer = document.getElementById('quizInput').value;
         const resultMsg = document.getElementById('resultMsg');
-        const quizContent = document.getElementById('quiz-content');
+        const quizContent = document.getElementById('quiz-content'); // 修正：新增此行來控制隱藏
         const successContent = document.getElementById('success-content');
         
         const correctAnswer = "3"; 
@@ -148,13 +137,18 @@
             resultMsg.innerText = "請先輸入數字喔！";
             resultMsg.style.color = "yellow";
         } else if (userAnswer === correctAnswer) {
-            successContent.style.display = "block";  // 顯示圖片容器
+            // 答對時：隱藏文字，顯示圖片
+            quizContent.style.display = "none";
+            successContent.style.display = "block";
         } else {
             resultMsg.innerText = "❌ 再數一次喔！";
-            resultMsg.style.color = "#8b0000"; // 深紅色
+            resultMsg.style.color = "#8b0000";
         }
     }
     </script>
+
+</body>
+</html>
 
 </body>
 </html>
