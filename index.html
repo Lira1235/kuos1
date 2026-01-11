@@ -47,6 +47,8 @@
             flex-direction: column;
             justify-content: flex-start;
             align-items: center; /* 讓格子內所有元素置中 */
+            position: relative; /* 讓內部定位更準確 */
+            overflow: hidden;   /* 確保圖片不超出格子的圓角 */
         }
 
         .grid-item h3 {
