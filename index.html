@@ -105,9 +105,13 @@
         <div class="grid-item">
             <h3>第一關-福氣到！</h3>
             <p>找找畫面中一共有幾個『福』字？</p>
-            <input type="number" id="quizInput" placeholder="數字">
+            <input type="number" id="quizInput" placeholder="輸入數字">
             <button class="btn-check" onclick="checkAnswer()">送出答案</button>
             <p id="resultMsg"></p>
+        </div>
+         <!-- 答對後要顯示的圖片（預設隱藏） -->
+        <div id="success-content" style="display: none; width: 100%; height: 100%;">
+            <img src="webA工作區域 1" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;">
         </div>
 
         <!-- 步驟 2 -->
@@ -134,14 +138,16 @@
     function checkAnswer() {
         const userAnswer = document.getElementById('quizInput').value;
         const resultMsg = document.getElementById('resultMsg');
+        const quizContent = document.getElementById('quiz-content');
+        const successContent = document.getElementById('success-content');
+        
         const correctAnswer = "3"; 
 
         if (userAnswer === "") {
             resultMsg.innerText = "請先輸入數字喔！";
             resultMsg.style.color = "yellow";
         } else if (userAnswer === correctAnswer) {
-            resultMsg.innerText = "🎉 答案正確！";
-            resultMsg.style.color = "#006400"; // 深綠色在白底上較清晰
+            successContent.style.display = "block";  // 顯示圖片容器
         } else {
             resultMsg.innerText = "❌ 再數一次喔！";
             resultMsg.style.color = "#8b0000"; // 深紅色
