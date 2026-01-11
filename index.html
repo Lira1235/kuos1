@@ -83,63 +83,63 @@
     </style>
 </head>
 <body>
-<div class="content">
-    <h1>製作七夕粿！</h1>  
-<div class="grid-container">
-    <div class="grid-item">
-        <h3>第一關-福氣到！</h3>
-        <p>請前往找找畫面中一共有幾個『福』字？</p>
-        <p>請輸入數量：</p>
-        <input type="number" id="quizInput" placeholder="輸入數字" style="width: 150px; height: 40px; text-align: center;"
-        style="display: flex; flex-direction: column; align-items: center; gap: 15px;"><br>
+   <div class="content">
+       <h1>製作七夕粿！</h1>  
+   <div class="grid-container">
+       <div class="grid-item">
+           <h3>第一關-福氣到！</h3>
+           <p>請前往找找畫面中一共有幾個『福』字？</p>
+           <p>請輸入數量：</p>
+           <input type="number" id="quizInput" placeholder="輸入數字" style="width: 150px; height: 40px; text-align: center;"
+           style="display: flex; flex-direction: column; align-items: center; gap: 15px;"><br>
     
     
-          <!-- 檢查按鈕 -->
-          <button onclick="checkAnswer()" 
-              style="margin-top: 15px;background-color: #e99e9d; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; margin-left: 10px; font-weight: bold;">
-              送出答案
-          </button>
+             <!-- 檢查按鈕 -->
+             <button onclick="checkAnswer()" 
+                 style="margin-top: 15px;background-color: #e99e9d; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; margin-left: 10px; font-weight: bold;">
+                 送出答案
+             </button>
     
-          <!-- 用來顯示結果的文字 -->
-          <p id="resultMsg" style="margin-top: 15px; font-weight: bold; min-height: 24px;"></p>
+             <!-- 用來顯示結果的文字 -->
+             <p id="resultMsg" style="margin-top: 15px; font-weight: bold; min-height: 24px;"></p>
+         </div>
+
+         <script>
+         function checkAnswer() {
+             const userAnswer = document.getElementById('quizInput').value;
+             const resultMsg = document.getElementById('resultMsg');
+    
+             // 設定你的正確答案（例如答案是 3）
+             const correctAnswer = "3"; 
+
+             if (userAnswer === "") {
+                 resultMsg.innerText = "請先輸入數字喔！";
+                 resultMsg.style.color = "yellow";
+             } else if (userAnswer === correctAnswer) {
+                 resultMsg.innerText = "🎉 太棒了！答案正確！";
+                 resultMsg.style.color = "#90ee90"; // 淺綠色
+             } else {
+                 resultMsg.innerText = "❌ 答錯了，再數一次圖片喔！";
+                 resultMsg.style.color = "#ffcccb"; // 淺紅色
+             }
+         }
+         </script>
       </div>
-
-      <script>
-      function checkAnswer() {
-          const userAnswer = document.getElementById('quizInput').value;
-          const resultMsg = document.getElementById('resultMsg');
-    
-          // 設定你的正確答案（例如答案是 3）
-          const correctAnswer = "3"; 
-
-          if (userAnswer === "") {
-              resultMsg.innerText = "請先輸入數字喔！";
-              resultMsg.style.color = "yellow";
-          } else if (userAnswer === correctAnswer) {
-              resultMsg.innerText = "🎉 太棒了！答案正確！";
-              resultMsg.style.color = "#90ee90"; // 淺綠色
-          } else {
-              resultMsg.innerText = "❌ 答錯了，再數一次圖片喔！";
-              resultMsg.style.color = "#ffcccb"; // 淺紅色
-          }
-      }
-      </script>
-   </div>
-   <div class="grid-item">
-        <h3>步驟 2</h3>
-        <p>搓圓壓洞</p>
+      <div class="grid-item">
+           <h3>步驟 2</h3>
+           <p>搓圓壓洞</p>
         
-    </div>
-    <div class="grid-item">
-        <h3>步驟 3</h3>
-        <p>下鍋水煮</p>
+       </div>
+       <div class="grid-item">
+           <h3>步驟 3</h3>
+           <p>下鍋水煮</p>
        
-    </div>
-    <div class="grid-item">
-        <h3>步驟 4</h3>
-        <p>淋上糖水</p>
-        <!-- 可以放更多圖片或文字 -->
-    </div>
+       </div>
+       <div class="grid-item">
+           <h3>步驟 4</h3>
+           <p>淋上糖水</p>
+           <!-- 可以放更多圖片或文字 -->
+       </div>
 
 </body>
 </html>
