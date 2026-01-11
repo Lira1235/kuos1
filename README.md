@@ -43,35 +43,36 @@
             margin-top: 20px;
         }
         /* 田字型容器 */
-.grid-container {
-    display: grid;
-    /* 建立兩欄，每欄寬度平分 (1fr) */
-    grid-template-columns: 1fr 1fr;
-    /* 建立兩列 */
-    grid-template-rows: auto auto;
-    /* 格子間的距離 */
-    gap: 15px;
-    padding: 20px;
-    max-width: 1000px;
-    margin: 0 auto;
-}
+        /* 田字型容器 */
+      .grid-container {
+          display: grid;
+          /* 建立兩欄，每欄寬度平分 (1fr) */
+          grid-template-columns: 1fr 1fr;
+          /* 建立兩列 */
+          grid-template-rows: auto auto;
+          /* 格子間的距離 */
+          gap: 15px;
+          padding: 20px;
+          max-width: 1000px;
+          margin: 0 auto;
+      }
 
-/* 每個格子的樣式 */
-.grid-item {
-    background-color: rgba(255, 255, 255, 0.2); /* 半透明背景 */
-    border: 1px solid #e99e9d;
-    border-radius: 15px;
-    padding: 15px;
-    text-align: center;
-    color: white;
-}
+      /* 每個格子的樣式 */
+      .grid-item {
+          background-color: rgba(255, 255, 255, 0.2); /* 半透明背景 */
+          border: 1px solid #e99e9d;
+          border-radius: 15px;
+          padding: 15px;
+          text-align: center;
+          color: white;
+      }
 
-/* 💡 重要：手機版自動變回一欄 (RWD) */
-@media (max-width: 600px) {
-    .grid-container {
-        grid-template-columns: 1fr; /* 在手機上變成一列排開 */
-    }
-}
+      /* 💡 重要：手機版自動變回一欄 (RWD) */
+      @media (max-width: 600px) {
+          .grid-container {
+           grid-template-columns: 1fr; /* 在手機上變成一列排開 */
+          }
+      }
     </style>
 </head>
 <body>
