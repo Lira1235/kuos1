@@ -50,17 +50,17 @@
     <div class="grid-item">
         <h3>步驟 1</h3>
         <p>準備粉團</p>
-        <img src="web1.png" style="width:100%">
+      
     </div>
     <div class="grid-item">
         <h3>步驟 2</h3>
         <p>搓圓壓洞</p>
-        <img src="web2.png" style="width:100%">
+        
     </div>
     <div class="grid-item">
         <h3>步驟 3</h3>
         <p>下鍋水煮</p>
-        <img src="web3.png" style="width:100%">
+       
     </div>
     <div class="grid-item">
         <h3>步驟 4</h3>
@@ -74,29 +74,17 @@
     
     <p>
 1.準備粉團：糯米粉加水揉成團，搓圓後用手指壓出中心凹洞。<br>
-    <div style="display: flex; gap: 10px; justify-content: center;">
-    <img src="web1.png" style="width: 50%">
-    <img src="web2.png" style="width: 50%"></div><br>
+   
     </p>
     <p>
-2.水煮：將粉團放入滾水中煮至浮起。<br>
-    <div style="display: flex; gap: 10px; justify-content: center;">
-    <img src="web3.png" style="width: 50%"></div><br>
+2.水煮：將粉團放入滾水中煮至浮起。<br>  
     </p>
     <p>
 3.製作糖水：糖（白糖、黑糖皆可）加水煮成糖水。<br>
-    <div style="display: flex; gap: 10px; justify-content: center;">
-    <img src="web4.png" style="width: 50%"></div><br>
     </p>
     <p>
-4.組合：將煮好的糖粿放入碗中，淋上糖水即可，也可加花生碎。
-    <div style="display: flex; gap: 10px; justify-content: center;">
-    <img src="web5.png" style="width: 50%"></div><br>
+4.組合：將煮好的糖粿放入碗中，淋上糖水即可，也可加花生碎。<br>
     </p>
-    <p>
-    <div style="display: flex; gap: 10px; justify-content: center;">
-    <img src="webb.png" style="width: 100%"></div><br>
-    </p>
-      
+
 </body>
 </html>
