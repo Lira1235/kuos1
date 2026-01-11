@@ -20,7 +20,7 @@
             background-position: center top;
             background-repeat: no-repeat;
             min-height: 100vh;
-            background-color: #ddcb9e;
+            background-color: #b22020;
 
         /* 設定標題顏色與大小 */
         h1 {
@@ -51,28 +51,35 @@
           /* 建立兩列 */
           grid-template-rows: auto auto;
           /* 格子間的距離 */
-          gap: 15px;
-          padding: 20px;
-          max-width: 1000px;
-          margin: 0 auto;
+          gap: 10px;
+          padding: 10px;
+          max-width: 100%px;
+          box-sizing: border-box;
       }
 
       /* 每個格子的樣式 */
       .grid-item {
           background-color: rgba(255, 255, 255, 0.2); /* 半透明背景 */
           border: 1px solid #e99e9d;
-          border-radius: 15px;
-          padding: 15px;
+          border-radius: 12px;
+          padding: 10px;
           text-align: center;
           color: white;
       }
-
-      /* 💡 重要：手機版自動變回一欄 (RWD) */
-      @media (max-width: 600px) {
-          .grid-container {
-           grid-template-columns: 1fr; /* 在手機上變成一列排開 */
-          }
+      .grid-item img {
+          width: 100%;       /* 圖片寬度填滿格子 */
+          height: 120px;     /* 固定高度，讓四個格子看起來一樣齊 */
+          object-fit: cover; /* 關鍵！避免圖片因為固定高度而被壓扁 */
+          border-radius: 8px;
       }
+
+      .grid-item p {
+          font-size: 14px;   /* 手機版文字縮小一點，避免折行太亂 */
+          margin-top: 8px;
+          color: #ffffff;
+      }
+
+    
     </style>
 </head>
 <body>
