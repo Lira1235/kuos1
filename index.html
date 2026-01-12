@@ -150,7 +150,6 @@
         const quizContent = document.getElementById('quiz-content');
         const successContent = document.getElementById('success-content');
         if (userAnswer === "3") {
-            quizContent.style.display = "none";
             successContent.style.display = "block";
         } else {
             resultMsg.innerText = "❌ 再數一次喔！";
@@ -164,7 +163,6 @@
         const successContent2 = document.getElementById('success-content2');
         const resultMsg2 = document.getElementById('resultMsg2');
         if (isCorrect) {
-            quizContent2.style.display = "none";
             successContent2.style.display = "block";
         } else {
             resultMsg2.innerText = "❌ 再猜猜看！";
