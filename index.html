@@ -133,27 +133,22 @@
     </div>
 
         <!-- 第三關 -->
-        <div class="grid-item" id="stage3" style="position: relative; padding: 0; overflow: hidden;">
-    <!-- 題目區域 -->
-    <div id="quiz3-content" style="padding: 15px; display: flex; flex-direction: column; align-items: center;">
-        <h3>第三關-成果照</h3>
-        <p>拍下你的七夕粿成果！</p>
-        
-        <!-- 自訂漂亮拍照按鈕 -->
-        <label for="cameraInput" class="btn-check" style="display: inline-block; cursor: pointer;">
-            📷 開啟相機
-        </label>
-        <!-- 隱藏原始 input，capture="camera" 會直接開啟相機 -->
-        <input type="file" id="cameraInput" accept="image/*" capture="camera" style="display: none;">
-        
-        <p id="resultMsg3" style="font-size: 12px; margin-top: 10px; color: #3a2301;">尚未拍照</p>
+        <div class="grid-item" id="stage3" style="position: relative; padding: 0; overflow: hidden; background: #000;">
+    <!-- 初始畫面：標題與啟動按鈕 -->
+    <div id="quiz3-content" style="padding: 15px; z-index: 2; text-align: center;">
+        <h3 style="color: white;">第三關-即時顯像</h3>
+        <p style="color: white;">點擊下方開啟即時鏡頭</p>
+        <button class="btn-check" onclick="startCamera()">📷 開啟鏡頭</button>
     </div>
 
-    <!-- 拍照後要顯示的照片預覽 (覆蓋全格) -->
-    <div id="success-content3" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
-        <img id="photo-preview" src="" style="width: 100%; height: 100%; object-fit: cover;">
-        <div style="position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.5); color: white; font-size: 12px; padding: 5px 0;">🎉 成果上傳成功！</div>
-    </div>
+    <!-- 即時相機畫面鏡像 -->
+    <video id="videoStream" autoplay playsinline muted 
+        style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;">
+    </video>
+
+    <!-- 拍照後的靜態圖（點擊畫面即可拍照） -->
+    <canvas id="canvas" style="display:none;"></canvas>
+    <img id="photo-preview" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 3;">
         </div>
 
         <!-- 第四關 -->
@@ -199,28 +194,53 @@
         }
     }   
         // 取得第三關相關元素
-const cameraInput = document.getElementById('cameraInput');
-const photoPreview = document.getElementById('photo-preview');
-const quizContent3 = document.getElementById('quiz3-content');
-const successContent3 = document.getElementById('success-content3');
+casync function startCamera() {
+    const video = document.getElementById('videoStream');
+    const quizContent = document.getElementById('quiz3-content');
 
-cameraInput.addEventListener('change', function() {
-    const file = this.files[0]; // 取得拍攝的照片檔案
-    if (file) {
-        const reader = new FileReader();
+    try {
+        // 請求開啟後置相機
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: "environment" }, 
+            audio: false 
+        });
         
-        reader.onload = function(e) {
-            // 1. 將讀取到的照片顯示在預覽圖中
-            photoPreview.src = e.target.result;
-            
-            // 2. 隱藏題目，顯示覆蓋照片
-            quizContent3.style.display = "none";
-            successContent3.style.display = "block";
-        }
+        video.srcObject = stream;
+        video.style.display = "block"; // 顯示影片串流
+        quizContent.style.background = "rgba(0,0,0,0.4)"; // 讓文字在影片上清楚
+        quizContent.innerHTML = "<h3 style='color:white;'>鏡頭已開啟</h3><p style='color:white;'>點擊畫面即可定格拍照</p>";
         
-        reader.readAsDataURL(file); // 讀取圖片路徑
+        // 點擊影片區域即可「拍照定格」
+        video.onclick = function() {
+            takePicture(stream);
+        };
+
+    } catch (err) {
+        alert("無法開啟相機，請檢查瀏覽器權限設定。");
+        console.error(err);
     }
-});
+}
+
+function takePicture(stream) {
+    const video = document.getElementById('videoStream');
+    const canvas = document.getElementById('canvas');
+    const photo = document.getElementById('photo-preview');
+    const quizContent = document.getElementById('quiz3-content');
+
+    // 將當前影片畫面畫在畫布上
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+
+    // 轉換成圖片並顯示
+    photo.src = canvas.toDataURL('image/png');
+    photo.style.display = "block";
+    video.style.display = "none";
+    quizContent.style.display = "none"; // 隱藏所有文字，完成覆蓋
+
+    // 停止相機以節省電力
+    stream.getTracks().forEach(track => track.stop());
+}
     </script>
 
 </body>
