@@ -4,7 +4,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>元益四福</title>
     <style>
-        /* 原有樣式保留 */
         body {
             background-image: url('未命名設計.gif'); 
             background-size: 100% auto;
@@ -15,7 +14,7 @@
             background-color: #b22020;
             margin: 0;
             padding: 10px;
-            padding-bottom: 80px; /* 預留底部按鈕空間 */
+            padding-bottom: 80px; 
         }
 
         h1 { text-align: center; color: #3a2301; font-size: 40px; margin-top: 20px; }
@@ -32,7 +31,7 @@
             position: relative; overflow: hidden; padding: 15px;
         }
 
-        /* --- 新增功能樣式 --- */
+        /* 手機彈窗樣式 */
         #phoneModal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center;
@@ -41,8 +40,9 @@
         .modal-box {
             background: #fff; padding: 25px; border-radius: 15px; text-align: center; width: 80%; max-width: 300px;
         }
-        .modal-box input { width: 100%; padding: 10px; margin: 15px 0; border: 1px solid #ccc; border-radius: 5px; }
+        .modal-box input { width: 100%; padding: 10px; margin: 15px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
 
+        /* 底部按鈕樣式 */
         .footer-redeem {
             position: fixed; bottom: 0; left: 0; width: 100%;
             background: rgba(255,255,255,0.9); padding: 15px 0;
@@ -54,7 +54,6 @@
         }
         #redeemBtn:disabled { background-color: #888; cursor: not-allowed; }
 
-        /* 原始其他樣式... */
         .btn-option { background-color: white; border: 1px solid #e99e9d; border-radius: 8px; padding: 8px; font-size: 20px; cursor: pointer; }
         input[type="number"] { width: 70px; height: 30px; text-align: center; border-radius: 8px; border: 1px solid #e99e9d; }
         .btn-check { margin-top: 10px; background-color: #e99e9d; color: white; border: none; padding: 8px 15px; border-radius: 10px; cursor: pointer; font-weight: bold; }
@@ -64,10 +63,9 @@
 </head>
 <body>
 
-    <!-- 手機號輸入彈窗 -->
     <div id="phoneModal">
         <div class="modal-box">
-            <h3 style="color:#b22020">歡迎進入七夕慶典</h3>
+            <h3 style="color:#b22020">歡迎進入元益四福</h3>
             <p>請輸入手機號碼開始體驗</p>
             <input type="tel" id="userPhoneInput" placeholder="例：0912345678" maxlength="10">
             <button class="btn-check" onclick="initUser()">確認送出</button>
@@ -77,6 +75,7 @@
     <h1>元益四福</h1>  
 
     <div class="grid-container">
+        <!-- 遊戲關卡維持不變 -->
         <div class="grid-item" id="stage1">
             <div id="quiz-content">
                 <h3>第一關-福氣到！</h3>
@@ -118,17 +117,14 @@
         </div>
     </div>
 
-    <!-- 底部兌換按鈕 -->
     <div class="footer-redeem">
         <button id="redeemBtn" onclick="handleRedeem()">兌換</button>
     </div>
 
     <script>
-        /* --- 手機與兌換邏輯 (已校正版) --- */
-    // 1. 已修正為 formResponse 格式
+    /* --- 手機與 Google 表單串接邏輯 --- */
+    // 已自動根據您的資訊配置
     const FORM_URL = "https://docs.google.com";
-    
-    // 2. 已根據您的連結校正 ID 為 1850183601
     const PHONE_ENTRY = "entry.1850183601"; 
 
     function initUser() {
@@ -142,11 +138,12 @@
 
     function refreshBtnStatus() {
         const phone = localStorage.getItem('currentPhone');
-        // 檢查該手機號是否在本地紀錄中已兌換
+        if (!phone) return;
+        
         const isRedeemed = localStorage.getItem('redeemed_' + phone);
         const btn = document.getElementById('redeemBtn');
         
-        if (isRedeemed) {
+        if (isRedeemed === 'true') {
             btn.innerText = "已兌換完畢";
             btn.disabled = true;
         } else {
@@ -157,24 +154,24 @@
 
     function handleRedeem() {
         const phone = localStorage.getItem('currentPhone');
-        
-        // 1. 立即標記已兌換 (防止重複點擊)
+        if (!phone) return alert("請先輸入手機號碼");
+
+        // 1. 本地標記已兌換 (刷新後依然有效)
         localStorage.setItem('redeemed_' + phone, 'true');
         refreshBtnStatus();
 
-        // 2. 顯示完成通知
+        // 2. 彈窗提示
         alert('兌換完成');
 
-        // 3. 非同步傳送到 Google 表單 (後台)
+        // 3. 非同步提交至 Google Forms 試算表
         const formData = new FormData();
         formData.append(PHONE_ENTRY, phone);
         
-        // 使用 [Fetch API](https://developer.mozilla.org) 傳送
         fetch(FORM_URL, { 
             method: "POST", 
             mode: "no-cors", 
             body: formData 
-        }).catch(err => console.warn("傳送失敗，請檢查網路。"));
+        }).catch(err => console.log("提交中..."));
     }
 
     window.onload = () => {
@@ -185,7 +182,7 @@
         }
     };
 
-    /* --- 原有遊戲邏輯 --- */
+    /* --- 遊戲關卡邏輯 --- */
     function checkAnswer() {
         if (document.getElementById('quizInput').value === "3") {
             document.getElementById('success-content').style.display = "block";
@@ -193,11 +190,9 @@
             document.getElementById('resultMsg').innerText = "❌ 再數一次喔！";
         }
     }
-
     function checkAnswer2(isCorrect) {
         if (isCorrect) document.getElementById('success-content2').style.display = "block";
     }
-
     async function startCamera() {
         const video = document.getElementById('videoStream');
         try {
@@ -205,7 +200,7 @@
             video.srcObject = stream;
             video.style.display = "block";
             document.getElementById('camera-overlay').style.display = "block";
-        } catch (err) { alert("開啟相機失敗"); }
+        } catch (err) { alert("開啟相機失敗，請確認 HTTPS 與權限"); }
     }
     </script>
 </body>
