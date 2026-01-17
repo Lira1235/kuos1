@@ -122,86 +122,102 @@
     </div>
 
     <script>
-    /* --- 手機與 Google 表單串接邏輯 --- */
-    // 已自動根據您的資訊配置
-    const FORM_URL = "https://docs.google.com";
-    const PHONE_ENTRY = "entry.1850183601"; 
+    /* --- 手機與後台連動邏輯 --- */
+const FORM_URL = "https://docs.google.com";
+const PHONE_ENTRY = "entry.1850183601"; 
 
-    function initUser() {
-        const phone = document.getElementById('userPhoneInput').value;
-        if (!/^09\d{8}$/.test(phone)) return alert("請輸入正確的手機號格式");
-        
-        localStorage.setItem('currentPhone', phone);
-        document.getElementById('phoneModal').style.display = 'none';
-        refreshBtnStatus();
+// 1. 使用者輸入手機號後的處理
+function initUser() {
+    const phone = document.getElementById('userPhoneInput').value;
+    
+    // 簡單格式檢查
+    if (!/^09\d{8}$/.test(phone)) {
+        return alert("請輸入正確的手機號碼格式（例：0912345678）");
     }
 
-    function refreshBtnStatus() {
-        const phone = localStorage.getItem('currentPhone');
-        if (!phone) return;
-        
-        const isRedeemed = localStorage.getItem('redeemed_' + phone);
-        const btn = document.getElementById('redeemBtn');
-        
-        if (isRedeemed === 'true') {
-            btn.innerText = "已兌換完畢";
-            btn.disabled = true;
-        } else {
-            btn.innerText = "兌換";
-            btn.disabled = false;
-        }
+    // 儲存目前正在使用的手機號
+    localStorage.setItem('currentPhone', phone);
+    
+    // 關閉輸入視窗
+    document.getElementById('phoneModal').style.display = 'none';
+
+    // 關鍵：立即檢查此號碼是否已兌換過
+    checkAndRefreshStatus(phone);
+}
+
+// 2. 檢查狀態並更新底部按鈕
+function checkAndRefreshStatus(phone) {
+    const btn = document.getElementById('redeemBtn');
+    const isRedeemed = localStorage.getItem('redeemed_' + phone);
+
+    if (isRedeemed === 'true') {
+        btn.innerText = "已兌換完畢";
+        btn.disabled = true;
+        btn.style.backgroundColor = "#888"; // 變灰色
+    } else {
+        btn.innerText = "兌換";
+        btn.disabled = false;
+        btn.style.backgroundColor = "#e99e9d"; // 恢復原色
     }
+}
 
-    function handleRedeem() {
-        const phone = localStorage.getItem('currentPhone');
-        if (!phone) return alert("請先輸入手機號碼");
+// 3. 按下兌換按鈕
+function handleRedeem() {
+    const phone = localStorage.getItem('currentPhone');
+    if (!phone) return alert("請先輸入手機號碼");
 
-        // 1. 本地標記已兌換 (刷新後依然有效)
-        localStorage.setItem('redeemed_' + phone, 'true');
-        refreshBtnStatus();
+    // 彈出成功訊息
+    alert('兌換完成');
 
-        // 2. 彈窗提示
-        alert('兌換完成');
+    // 標記此手機號已完成兌換（記錄於瀏覽器）
+    localStorage.setItem('redeemed_' + phone, 'true');
+    
+    // 更新按鈕狀態
+    checkAndRefreshStatus(phone);
 
-        // 3. 非同步提交至 Google Forms 試算表
-        const formData = new FormData();
-        formData.append(PHONE_ENTRY, phone);
-        
-        fetch(FORM_URL, { 
-            method: "POST", 
-            mode: "no-cors", 
-            body: formData 
-        }).catch(err => console.log("提交中..."));
+    // 同步傳送到 Google 表單後台
+    const formData = new FormData();
+    formData.append(PHONE_ENTRY, phone);
+    
+    fetch(FORM_URL, { 
+        method: "POST", 
+        mode: "no-cors", 
+        body: formData 
+    }).catch(err => console.log("提交至後台中..."));
+}
+
+// 頁面刷新時的操作：保持彈窗顯示，讓使用者輸入
+window.onload = () => {
+    // 確保彈窗是開啟的
+    document.getElementById('phoneModal').style.display = 'flex';
+    
+    // 如果有舊資料，預填入輸入框（可選）
+    const lastPhone = localStorage.getItem('currentPhone');
+    if (lastPhone) {
+        document.getElementById('userPhoneInput').value = lastPhone;
     }
+};
 
-    window.onload = () => {
-        const savedPhone = localStorage.getItem('currentPhone');
-        if (savedPhone) {
-            document.getElementById('phoneModal').style.display = 'none';
-            refreshBtnStatus();
-        }
-    };
-
-    /* --- 遊戲關卡邏輯 --- */
-    function checkAnswer() {
-        if (document.getElementById('quizInput').value === "3") {
-            document.getElementById('success-content').style.display = "block";
-        } else {
-            document.getElementById('resultMsg').innerText = "❌ 再數一次喔！";
-        }
+/* --- 原有遊戲邏輯 (保留) --- */
+function checkAnswer() {
+    if (document.getElementById('quizInput').value === "3") {
+        document.getElementById('success-content').style.display = "block";
+    } else {
+        document.getElementById('resultMsg').innerText = "❌ 再數一次喔！";
     }
-    function checkAnswer2(isCorrect) {
-        if (isCorrect) document.getElementById('success-content2').style.display = "block";
-    }
-    async function startCamera() {
-        const video = document.getElementById('videoStream');
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-            video.srcObject = stream;
-            video.style.display = "block";
-            document.getElementById('camera-overlay').style.display = "block";
-        } catch (err) { alert("開啟相機失敗，請確認 HTTPS 與權限"); }
-    }
+}
+function checkAnswer2(isCorrect) {
+    if (isCorrect) document.getElementById('success-content2').style.display = "block";
+}
+async function startCamera() {
+    const video = document.getElementById('videoStream');
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        video.srcObject = stream;
+        video.style.display = "block";
+        document.getElementById('camera-overlay').style.display = "block";
+    } catch (err) { alert("相機啟動失敗"); }
+}
     </script>
 </body>
 </html>
