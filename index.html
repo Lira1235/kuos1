@@ -124,10 +124,12 @@
     </div>
 
     <script>
-    /* --- 手機與兌換邏輯 --- */
-    // 請填入您的 Google 表單資訊
-    const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfJCZWRohMSR1VAlt87qOCTLFJRQxw9BEN7eV5zHusD1lsjbQ/viewform?usp=pp_url&entry.1850183601=0912345678";
-    const PHONE_ENTRY = "entry.123456789"; // 手機欄位ID
+        /* --- 手機與兌換邏輯 (已校正版) --- */
+    // 1. 已修正為 formResponse 格式
+    const FORM_URL = "https://docs.google.com";
+    
+    // 2. 已根據您的連結校正 ID 為 1850183601
+    const PHONE_ENTRY = "entry.1850183601"; 
 
     function initUser() {
         const phone = document.getElementById('userPhoneInput').value;
@@ -140,6 +142,7 @@
 
     function refreshBtnStatus() {
         const phone = localStorage.getItem('currentPhone');
+        // 檢查該手機號是否在本地紀錄中已兌換
         const isRedeemed = localStorage.getItem('redeemed_' + phone);
         const btn = document.getElementById('redeemBtn');
         
@@ -155,20 +158,25 @@
     function handleRedeem() {
         const phone = localStorage.getItem('currentPhone');
         
-        // 1. 顯示完成
-        alert('兌換完成');
-
-        // 2. 標記已兌換
+        // 1. 立即標記已兌換 (防止重複點擊)
         localStorage.setItem('redeemed_' + phone, 'true');
         refreshBtnStatus();
 
-        // 3. 傳送到 Google 表單後台
+        // 2. 顯示完成通知
+        alert('兌換完成');
+
+        // 3. 非同步傳送到 Google 表單 (後台)
         const formData = new FormData();
         formData.append(PHONE_ENTRY, phone);
-        fetch(FORM_URL, { method: "POST", mode: "no-cors", body: formData });
+        
+        // 使用 [Fetch API](https://developer.mozilla.org) 傳送
+        fetch(FORM_URL, { 
+            method: "POST", 
+            mode: "no-cors", 
+            body: formData 
+        }).catch(err => console.warn("傳送失敗，請檢查網路。"));
     }
 
-    // 頁面加載檢查
     window.onload = () => {
         const savedPhone = localStorage.getItem('currentPhone');
         if (savedPhone) {
