@@ -124,11 +124,12 @@
     <script>
    
 /* --- 校正後的後台連動邏輯 --- */
-// 1. 自動轉換 viewform 為提交專用的 formResponse
+// 1. 這裡必須是 formResponse 結尾的完整網址，資料才能寫入試算表
 const FORM_URL = "https://docs.google.com";
 
-// 2. 根據您的連結校正 Entry ID
+// 2. 這是您表單中對應手機號碼的 Entry ID
 const PHONE_ENTRY = "entry.1545230275"; 
+
 
 // 使用者輸入手機號後的處理
 function initUser() {
