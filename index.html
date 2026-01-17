@@ -122,30 +122,28 @@
     </div>
 
     <script>
-    /* --- 手機與後台連動邏輯 --- */
+   
+/* --- 校正後的後台連動邏輯 --- */
+// 1. 自動轉換 viewform 為提交專用的 formResponse
 const FORM_URL = "https://docs.google.com";
+
+// 2. 根據您的連結校正 Entry ID
 const PHONE_ENTRY = "entry.1545230275"; 
 
-// 1. 使用者輸入手機號後的處理
+// 使用者輸入手機號後的處理
 function initUser() {
     const phone = document.getElementById('userPhoneInput').value;
     
-    // 簡單格式檢查
     if (!/^09\d{8}$/.test(phone)) {
         return alert("請輸入正確的手機號碼格式（例：0912345678）");
     }
 
-    // 儲存目前正在使用的手機號
     localStorage.setItem('currentPhone', phone);
-    
-    // 關閉輸入視窗
     document.getElementById('phoneModal').style.display = 'none';
-
-    // 關鍵：立即檢查此號碼是否已兌換過
     checkAndRefreshStatus(phone);
 }
 
-// 2. 檢查狀態並更新底部按鈕
+// 檢查狀態並更新底部按鈕
 function checkAndRefreshStatus(phone) {
     const btn = document.getElementById('redeemBtn');
     const isRedeemed = localStorage.getItem('redeemed_' + phone);
@@ -153,45 +151,43 @@ function checkAndRefreshStatus(phone) {
     if (isRedeemed === 'true') {
         btn.innerText = "已兌換完畢";
         btn.disabled = true;
-        btn.style.backgroundColor = "#888"; // 變灰色
+        btn.style.backgroundColor = "#888";
     } else {
         btn.innerText = "兌換";
         btn.disabled = false;
-        btn.style.backgroundColor = "#e99e9d"; // 恢復原色
+        btn.style.backgroundColor = "#e99e9d";
     }
 }
 
-// 3. 按下兌換按鈕
+// 按下兌換按鈕：顯示完成並發送到後台
 function handleRedeem() {
     const phone = localStorage.getItem('currentPhone');
     if (!phone) return alert("請先輸入手機號碼");
 
-    // 彈出成功訊息
-    alert('兌換完成');
-
-    // 標記此手機號已完成兌換（記錄於瀏覽器）
+    // 1. 本地標記已兌換 (刷新後依然鎖定)
     localStorage.setItem('redeemed_' + phone, 'true');
-    
-    // 更新按鈕狀態
     checkAndRefreshStatus(phone);
 
-    // 同步傳送到 Google 表單後台
-    const formData = new FormData();
-    formData.append(PHONE_ENTRY, phone);
-    
-    fetch(FORM_URL, { 
-        method: "POST", 
-        mode: "no-cors", 
-        body: formData 
-    }).catch(err => console.log("提交至後台中..."));
+    // 2. 顯示成功視窗
+    alert('兌換完成');
+
+    // 3. 封裝數據並發送到 Google 表單
+    const params = new URLSearchParams();
+    params.append(PHONE_ENTRY, phone);
+
+    fetch(FORM_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: params.toString()
+    }).catch(e => console.log("提交中..."));
 }
 
-// 頁面刷新時的操作：保持彈窗顯示，讓使用者輸入
+// 頁面刷新時的操作
 window.onload = () => {
-    // 確保彈窗是開啟的
     document.getElementById('phoneModal').style.display = 'flex';
-    
-    // 如果有舊資料，預填入輸入框（可選）
     const lastPhone = localStorage.getItem('currentPhone');
     if (lastPhone) {
         document.getElementById('userPhoneInput').value = lastPhone;
