@@ -59,6 +59,36 @@
         .btn-check { margin-top: 10px; background-color: #e99e9d; color: white; border: none; padding: 8px 15px; border-radius: 10px; cursor: pointer; font-weight: bold; }
         #resultMsg, #resultMsg2 { font-size: 11px; margin-top: 5px; min-height: 15px; }
         #videoStream, #camera-overlay, #photo-preview { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: fill; }
+  /* 圓形懸浮按鈕 */
+#floatingBtn {
+    position: fixed;
+    bottom: 150px; right: 20px;
+    width: 60px; height: 60px;
+    background-color: #3a2301;
+    color: white;
+    border-radius: 50%;
+    display: flex; justify-content: center; align-items: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    cursor: move; z-index: 9999;
+    touch-action: none; user-select: none;
+    font-size: 14px; font-weight: bold;
+}
+
+/* 圖片彈出層遮罩 */
+#imageOverlay {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: none; justify-content: center; align-items: center;
+    z-index: 10000;
+}
+
+/* 彈出的圖片樣式 */
+#popupImage {
+    max-width: 85%; max-height: 85%;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(255,255,255,0.2);
+}
     </style>
 </head>
 <body>
@@ -133,6 +163,13 @@
             <p>淋上糖水，大功告成！</p>
         </div>
     </div>
+    <!-- 懸浮按鈕 -->
+<div id="floatingBtn">說明</div>
+
+<!-- 圖片彈出層 -->
+<div id="imageOverlay" onclick="closeImageOverlay()">
+    <img id="popupImage" src="您的說明圖片.png" alt="說明圖片" onclick="event.stopPropagation()">
+</div>
 
     <div class="footer-redeem">
         <button id="redeemBtn" onclick="handleRedeem()">兌換</button>
@@ -332,6 +369,44 @@ function takePicture(stream) {
     overlay.style.display = "none";
     quizContent.style.display = "none";
     stream.getTracks().forEach(track => track.stop());
+}
+    const dragBtn = document.getElementById("floatingBtn");
+const overlay = document.getElementById("imageOverlay");
+let isDragging = false;
+let startX, startY, moveX = 0, moveY = 0;
+let startTime;
+
+// --- 拖動邏輯 ---
+dragBtn.addEventListener("touchstart", (e) => {
+    isDragging = false;
+    startTime = Date.now();
+    startX = e.touches[0].clientX - moveX;
+    startY = e.touches[0].clientY - moveY;
+}, {passive: false});
+
+dragBtn.addEventListener("touchmove", (e) => {
+    isDragging = true;
+    e.preventDefault();
+    moveX = e.touches[0].clientX - startX;
+    moveY = e.touches[0].clientY - startY;
+    dragBtn.style.transform = `translate3d(${moveX}px, ${moveY}px, 0)`;
+}, {passive: false});
+
+dragBtn.addEventListener("touchend", (e) => {
+    const duration = Date.now() - startTime;
+    // 如果移動距離極短且時間短，判定為「點擊」而非「拖動」
+    if (!isDragging || duration < 150) {
+        showImageOverlay();
+    }
+});
+
+// --- 顯示/關閉圖片邏輯 ---
+function showImageOverlay() {
+    overlay.style.display = "flex";
+}
+
+function closeImageOverlay() {
+    overlay.style.display = "none";
 }
 </script>
 
