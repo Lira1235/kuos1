@@ -125,7 +125,7 @@
    
 /* --- 校正後的後台連動邏輯 --- */
 // 1. 這裡必須是 formResponse 結尾的完整網址，資料才能寫入試算表
-const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdpnvMA2aDoBGPkT4kXU1CR_EPJ0lvsY0m3VOwVsmEa2wOaMw/viewform?usp=sharing&ouid=117119912211233240463";
+const FORM_URL = "https://docs.google.com/spreadsheets/d/1wTurdpPC5aqPfznm3BbTjkXGR-xu3eBbNkRU5mCgUhQ/edit?usp=sharing";
 
 // 2. 這是您表單中對應手機號碼的 Entry ID
 const PHONE_ENTRY = "entry.1545230275"; 
@@ -175,7 +175,7 @@ function handleRedeem() {
     params.append("entry.1545230275", phone); // 請確認 ID 無誤
 
     // 3. 提交
-    fetch("https://docs.google.com/forms/d/e/1FAIpQLSdpnvMA2aDoBGPkT4kXU1CR_EPJ0lvsY0m3VOwVsmEa2wOaMw/viewform?usp=sharing&ouid=117119912211233240463", {
+    fetch("https://docs.google.com/spreadsheets/d/1wTurdpPC5aqPfznm3BbTjkXGR-xu3eBbNkRU5mCgUhQ/edit?usp=sharing", {
         method: "POST",
         mode: "no-cors", // 跨網域提交必須設為 no-cors
         headers: {
