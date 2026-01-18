@@ -137,7 +137,16 @@
     <div class="footer-redeem">
         <button id="redeemBtn" onclick="handleRedeem()">兌換</button>
     </div>
-
+<!-- 自定義二次確認彈窗 -->
+<div id="confirmModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 3000;">
+    <div class="modal-box">
+        <p style="color: #b22020; font-weight: bold; line-height: 1.6;">請交由現場工作人員操作點選；<br>如自行誤觸或提前點選，恕無法兌換。</p>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button onclick="closeConfirm()" style="flex: 1; padding: 10px; background: #ccc; border: none; border-radius: 5px;">返回</button>
+            <button onclick="executeRedeem()" style="flex: 1; padding: 10px; background: #e99e9d; color: white; border: none; border-radius: 5px;">我是工作人員</button>
+        </div>
+    </div>
+</div>
   
 <script>
 /* --- 後台即時連動與提交邏輯 (核心校正) --- */
@@ -201,25 +210,33 @@ function checkAndRefreshStatus(phone) {
     }
 }
 
+// 1. 點擊底部「兌換」按鈕時觸發
 function handleRedeem() {
-    // 1. 彈出二次確認視窗
-    const confirmRedeem = confirm("請交由現場工作人員操作點選；\n如自行誤觸或提前點選，恕無法兌換。");
-
-    // 2. 如果使用者點擊「取消」，則停止執行
-    if (!confirmRedeem) return;
-
-    // 3. 使用者點擊「我是工作人員」，開始執行原有的兌換邏輯
     const phone = localStorage.getItem('currentPhone');
     if (!phone) return alert("請先輸入手機號碼");
+    
+    // 顯示自定義的二次確認彈窗
+    document.getElementById('confirmModal').style.display = 'flex';
+}
 
-    // 顯示完成
-    alert('兌換完成');
+// 2. 關閉彈窗
+function closeConfirm() {
+    document.getElementById('confirmModal').style.display = 'none';
+}
 
-    // 標記已兌換並更新按鈕
+// 3. 真正執行兌換 (由彈窗內的「工作人員確認」按鈕觸發)
+function executeRedeem() {
+    const phone = localStorage.getItem('currentPhone');
+    
+    // 執行兌換流程
     localStorage.setItem('redeemed_' + phone, 'true');
     checkAndRefreshStatus(phone);
+    
+    // 關閉彈窗並提示完成
+    closeConfirm();
+    alert('兌換完成');
 
-    // 發送到 Google 表單後台
+    // 提交到 [Google Forms formResponse](https://support.google.com)
     const params = new URLSearchParams();
     params.append(PHONE_ENTRY, phone);
     
@@ -230,6 +247,7 @@ function handleRedeem() {
         body: params.toString() 
     }).catch(e => console.log("提交中..."));
 }
+
 
 
 // 頁面刷新初始化
