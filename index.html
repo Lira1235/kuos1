@@ -110,7 +110,7 @@
             <div id="quiz-content">
                 <h3>第一關-福氣到！</h3>
                 <p>請找找看，畫面中一共有幾個「福」字？</p>
-                <input type="number" id="quizInput" placeholder="數字">
+                <input type="number" id="quizInput" placeholder="輸入數字">
                 <button class="btn-check" onclick="checkAnswer()">送出答案</button>
                 <p id="resultMsg"></p>
             </div>
@@ -315,7 +315,7 @@ window.onload = () => {
 
 /* --- 遊戲關卡邏輯 --- */
 function checkAnswer() {
-    if (document.getElementById('quizInput').value === "3") {
+    if (document.getElementById('quizInput').value === "12") {
         document.getElementById('success-content').style.display = "block";
     } else {
         document.getElementById('resultMsg').innerText = "❌ 再數一次喔！";
