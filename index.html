@@ -125,12 +125,12 @@
         <p>請選出代表功名順利的圖案</p>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px;">
             <!-- 四個選項，只有學士帽(🎓)傳入 true -->
-            <button class="btn-option" onclick="checkAnswer2(false)">💰</button>
-            <button class="btn-option" onclick="checkAnswer2(true)">🎓</button>
-            <button class="btn-option" onclick="checkAnswer2(false)">🍎</button>
-            <button class="btn-option" onclick="checkAnswer2(false)">❤️</button>
+            <button class="btn-option" onclick="checkAnswer2(false)">中式漢餅</button>
+            <button class="btn-option" onclick="checkAnswer2(true)">鳳梨酥</button>
+            <button class="btn-option" onclick="checkAnswer2(false)">百年糕</button>
+            <button class="btn-option" onclick="checkAnswer2(false)">發糕</button>
         </div>
-        <p id="resultMsg2"></p>
+        <p id="resultMsg3"></p>
     </div>
     <div id="success-content2" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
         <img src="webB工作區域 1.png" style="width: 100%; height: 100%; object-fit: cover;">
@@ -329,7 +329,7 @@ function checkAnswer2(isCorrect) {
         document.getElementById('resultMsg2').innerText = ""; 
     } else {
         // 答錯了，顯示提示文字
-        const msg = document.getElementById('resultMsg2');
+        const msg = document.getElementById('resultMsg3');
         msg.innerText = "❌ 再猜猜看！";
         msg.style.color = "#8b0000";
         msg.style.fontWeight = "bold";
