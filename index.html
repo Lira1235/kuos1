@@ -230,7 +230,17 @@ function checkAnswer() {
 }
 
 function checkAnswer2(isCorrect) {
-    if (isCorrect) document.getElementById('success-content2').style.display = "block";
+    if (isCorrect) {
+        // 答對了，顯示成功圖片
+        document.getElementById('success-content2').style.display = "block";
+        document.getElementById('resultMsg2').innerText = ""; 
+    } else {
+        // 答錯了，顯示提示文字
+        const msg = document.getElementById('resultMsg2');
+        msg.innerText = "❌ 再猜猜看！";
+        msg.style.color = "#8b0000";
+        msg.style.fontWeight = "bold";
+    }
 }
 
 async function startCamera() {
