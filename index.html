@@ -89,16 +89,23 @@
             </div>
         </div>
 
-        <div class="grid-item" id="stage2">
-            <div id="quiz2-content">
-                <h3>第二關-功名到！</h3>
-                <button class="btn-option" onclick="checkAnswer2(true)">🎓</button>
-                <p id="resultMsg2"></p>
-            </div>
-            <div id="success-content2" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
-                <img src="webB工作區域 1.png" style="width: 100%; height: 100%; object-fit: cover;">
-            </div>
+      <div class="grid-item" id="stage2" style="padding:0;">
+    <div id="quiz2-content" style="padding:15px;">
+        <h3>第二關-功名到！</h3>
+        <p>請選出代表功名順利的圖案</p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px;">
+            <!-- 四個選項，只有學士帽(🎓)傳入 true -->
+            <button class="btn-option" onclick="checkAnswer2(false)">💰</button>
+            <button class="btn-option" onclick="checkAnswer2(true)">🎓</button>
+            <button class="btn-option" onclick="checkAnswer2(false)">🍎</button>
+            <button class="btn-option" onclick="checkAnswer2(false)">❤️</button>
         </div>
+        <p id="resultMsg2"></p>
+    </div>
+    <div id="success-content2" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+        <img src="webB工作區域 1.png" style="width: 100%; height: 100%; object-fit: cover;">
+    </div>
+</div>
 
         <div class="grid-item" id="stage3">
             <div id="quiz3-content">
