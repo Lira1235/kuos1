@@ -123,13 +123,18 @@
 
     <script>
    
-/* --- 後台即時連動邏輯 --- */
+<script>
+/* --- 後台即時連動邏輯 (已校正) --- */
+// 1. 提交網址：已補全為 formResponse 確保寫入試算表
 const FORM_URL = "https://docs.google.com";
+// 2. 手機欄位 ID
 const PHONE_ENTRY = "entry.1545230275"; 
+// 3. 您部署的查詢 API
 const CHECK_API_URL = "https://script.google.com/macros/s/AKfycbxkF94-7CGRp-7-Xp3STilyvonfx2ftzv_7LXnkFvlRzcz-PUNEwUF3u91BqrODcg4x/exec"; 
 
 async function initUser() {
-    const phone = document.getElementById('userPhoneInput').value;
+    const phoneInput = document.getElementById('userPhoneInput');
+    const phone = phoneInput.value;
     const btn = document.querySelector("#phoneModal .btn-check");
     
     if (!/^09\d{8}$/.test(phone)) return alert("請輸入正確的手機號格式");
@@ -138,12 +143,12 @@ async function initUser() {
     btn.disabled = true;
 
     try {
-        // 1. 即時向試算表查詢號碼是否存在
+        // 1. 即時向 Google Sheets 查詢號碼是否存在
         const response = await fetch(`${CHECK_API_URL}?phone=${phone}`);
         const result = await response.json();
 
         if (result.exists) {
-            // 2. 如果試算表已有資料，顯示已兌換並鎖定按鈕
+            // 2. 如果試算表已有資料，顯示提示並同步本地鎖定狀態
             alert("此手機號已兌換完畢！");
             localStorage.setItem('redeemed_' + phone, 'true');
         }
@@ -153,7 +158,9 @@ async function initUser() {
         checkAndRefreshStatus(phone);
 
     } catch (e) {
-        // 網路錯誤時降級為本地判斷
+        // 若查詢 API 故障，則直接進入遊戲並依賴本地判斷
+        console.log("查詢失敗，切換至本地模式");
+        localStorage.setItem('currentPhone', phone);
         document.getElementById('phoneModal').style.display = 'none';
         checkAndRefreshStatus(phone);
     } finally {
@@ -165,6 +172,7 @@ async function initUser() {
 function checkAndRefreshStatus(phone) {
     const btn = document.getElementById('redeemBtn');
     const isRedeemed = localStorage.getItem('redeemed_' + phone);
+    
     if (isRedeemed === 'true') {
         btn.innerText = "已兌換完畢";
         btn.disabled = true;
@@ -178,19 +186,26 @@ function checkAndRefreshStatus(phone) {
 
 function handleRedeem() {
     const phone = localStorage.getItem('currentPhone');
-    alert('兌換完成');
+    if (!phone) return alert("請先輸入手機號碼");
+
+    // 1. 本地標記已兌換 (刷新後鎖定)
     localStorage.setItem('redeemed_' + phone, 'true');
     checkAndRefreshStatus(phone);
+    alert('兌換完成');
 
+    // 2. 發送數據到 Google 表單 [formResponse](https://support.google.com)
     const params = new URLSearchParams();
     params.append(PHONE_ENTRY, phone);
-    fetch(FORM_URL, { method: "POST", mode: "no-cors", body: params.toString() });
+    
+    fetch(FORM_URL, { 
+        method: "POST", 
+        mode: "no-cors", 
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: params.toString() 
+    }).catch(e => console.log("提交中..."));
 }
 
-window.onload = () => {
-    document.getElementById('phoneModal').style.display = 'flex';
-};
-// 頁面刷新時的操作
+// 頁面刷新時的操作：強制彈窗並預填上次號碼
 window.onload = () => {
     document.getElementById('phoneModal').style.display = 'flex';
     const lastPhone = localStorage.getItem('currentPhone');
@@ -199,7 +214,7 @@ window.onload = () => {
     }
 };
 
-/* --- 原有遊戲邏輯 (保留) --- */
+/* --- 原有遊戲邏輯 --- */
 function checkAnswer() {
     if (document.getElementById('quizInput').value === "3") {
         document.getElementById('success-content').style.display = "block";
@@ -217,8 +232,9 @@ async function startCamera() {
         video.srcObject = stream;
         video.style.display = "block";
         document.getElementById('camera-overlay').style.display = "block";
-    } catch (err) { alert("相機啟動失敗"); }
+    } catch (err) { alert("開啟相機失敗"); }
 }
-    </script>
+</script>
+
 </body>
 </html>
