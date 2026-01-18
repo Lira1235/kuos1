@@ -208,7 +208,7 @@ function handleRedeem() {
     // 2. 如果使用者點擊「取消」，則停止執行
     if (!confirmRedeem) return;
 
-    // 3. 使用者點擊「確認」，開始執行原有的兌換邏輯
+    // 3. 使用者點擊「我是工作人員」，開始執行原有的兌換邏輯
     const phone = localStorage.getItem('currentPhone');
     if (!phone) return alert("請先輸入手機號碼");
 
