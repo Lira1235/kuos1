@@ -124,12 +124,11 @@
     <script>
    
 <script>
-/* --- 後台即時連動邏輯 (已校正) --- */
-// 1. 提交網址：已補全為 formResponse 確保寫入試算表
+/* --- 後台即時連動與查詢邏輯 --- */
+// 1. 已補全為 formResponse 提交網址
 const FORM_URL = "https://docs.google.com";
-// 2. 手機欄位 ID
 const PHONE_ENTRY = "entry.1545230275"; 
-// 3. 您部署的查詢 API
+// 您的查詢 API
 const CHECK_API_URL = "https://script.google.com/macros/s/AKfycbxkF94-7CGRp-7-Xp3STilyvonfx2ftzv_7LXnkFvlRzcz-PUNEwUF3u91BqrODcg4x/exec"; 
 
 async function initUser() {
@@ -148,7 +147,7 @@ async function initUser() {
         const result = await response.json();
 
         if (result.exists) {
-            // 2. 如果試算表已有資料，顯示提示並同步本地鎖定狀態
+            // 2. 如果試算表已有資料，標記已兌換
             alert("此手機號已兌換完畢！");
             localStorage.setItem('redeemed_' + phone, 'true');
         }
@@ -158,8 +157,7 @@ async function initUser() {
         checkAndRefreshStatus(phone);
 
     } catch (e) {
-        // 若查詢 API 故障，則直接進入遊戲並依賴本地判斷
-        console.log("查詢失敗，切換至本地模式");
+        // API 故障時降級處理
         localStorage.setItem('currentPhone', phone);
         document.getElementById('phoneModal').style.display = 'none';
         checkAndRefreshStatus(phone);
@@ -188,12 +186,12 @@ function handleRedeem() {
     const phone = localStorage.getItem('currentPhone');
     if (!phone) return alert("請先輸入手機號碼");
 
-    // 1. 本地標記已兌換 (刷新後鎖定)
+    // 1. 本地標記已兌換
     localStorage.setItem('redeemed_' + phone, 'true');
     checkAndRefreshStatus(phone);
     alert('兌換完成');
 
-    // 2. 發送數據到 Google 表單 [formResponse](https://support.google.com)
+    // 2. 發送數據到 Google 表單
     const params = new URLSearchParams();
     params.append(PHONE_ENTRY, phone);
     
@@ -205,7 +203,6 @@ function handleRedeem() {
     }).catch(e => console.log("提交中..."));
 }
 
-// 頁面刷新時的操作：強制彈窗並預填上次號碼
 window.onload = () => {
     document.getElementById('phoneModal').style.display = 'flex';
     const lastPhone = localStorage.getItem('currentPhone');
@@ -222,17 +219,50 @@ function checkAnswer() {
         document.getElementById('resultMsg').innerText = "❌ 再數一次喔！";
     }
 }
+
 function checkAnswer2(isCorrect) {
     if (isCorrect) document.getElementById('success-content2').style.display = "block";
 }
+
 async function startCamera() {
     const video = document.getElementById('videoStream');
+    const overlay = document.getElementById('camera-overlay');
+    const quizContent = document.getElementById('quiz3-content');
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
         video.srcObject = stream;
         video.style.display = "block";
-        document.getElementById('camera-overlay').style.display = "block";
-    } catch (err) { alert("開啟相機失敗"); }
+        overlay.style.display = "block";
+        quizContent.innerHTML = "<p style='margin:0; font-weight:bold; background:white;'>📷 點擊畫面拍照</p>";
+        video.onclick = () => takePicture(stream);
+    } catch (err) {
+        alert("請確保使用 HTTPS 並允許相機權限。");
+    }
+}
+
+function takePicture(stream) {
+    const video = document.getElementById('videoStream');
+    const overlay = document.getElementById('camera-overlay');
+    const canvas = document.getElementById('canvas');
+    const photo = document.getElementById('photo-preview');
+    const quizContent = document.getElementById('quiz3-content');
+
+    const rect = video.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+    const ctx = canvas.getContext('2d');
+
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(overlay, 0, 0, canvas.width, canvas.height);
+
+    photo.src = canvas.toDataURL('image/png');
+    photo.style.display = "block";
+    
+    video.style.display = "none";
+    overlay.style.display = "none";
+    quizContent.style.display = "none";
+
+    stream.getTracks().forEach(track => track.stop());
 }
 </script>
 
