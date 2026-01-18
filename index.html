@@ -165,25 +165,24 @@ function handleRedeem() {
     const phone = localStorage.getItem('currentPhone');
     if (!phone) return alert("請先輸入手機號碼");
 
-    // 1. 本地標記已兌換 (刷新後依然鎖定)
+    // 1. 本地鎖定狀態
     localStorage.setItem('redeemed_' + phone, 'true');
     checkAndRefreshStatus(phone);
-
-    // 2. 顯示成功視窗
     alert('兌換完成');
 
-    // 3. 封裝數據並發送到 Google 表單
+    // 2. 封裝數據：使用 URLSearchParams 模擬表單提交
     const params = new URLSearchParams();
-    params.append(PHONE_ENTRY, phone);
+    params.append("entry.1545230275", phone); // 請確認 ID 無誤
 
-    fetch(FORM_URL, {
+    // 3. 提交
+    fetch("https://docs.google.com", {
         method: "POST",
-        mode: "no-cors",
+        mode: "no-cors", // 跨網域提交必須設為 no-cors
         headers: {
             "Content-Type": "application/x-www-form-urlencoded"
         },
         body: params.toString()
-    }).catch(e => console.log("提交中..."));
+    }).catch(e => console.error("提交失敗"));
 }
 
 // 頁面刷新時的操作
