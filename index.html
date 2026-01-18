@@ -202,14 +202,24 @@ function checkAndRefreshStatus(phone) {
 }
 
 function handleRedeem() {
+    // 1. 彈出二次確認視窗
+    const confirmRedeem = confirm("請交由現場工作人員操作點選；\n如自行誤觸或提前點選，恕無法兌換。");
+
+    // 2. 如果使用者點擊「取消」，則停止執行
+    if (!confirmRedeem) return;
+
+    // 3. 使用者點擊「確認」，開始執行原有的兌換邏輯
     const phone = localStorage.getItem('currentPhone');
     if (!phone) return alert("請先輸入手機號碼");
 
+    // 顯示完成
     alert('兌換完成');
+
+    // 標記已兌換並更新按鈕
     localStorage.setItem('redeemed_' + phone, 'true');
     checkAndRefreshStatus(phone);
 
-    // 封裝數據模擬 [Google 表單提交](https://support.google.com)
+    // 發送到 Google 表單後台
     const params = new URLSearchParams();
     params.append(PHONE_ENTRY, phone);
     
@@ -220,6 +230,7 @@ function handleRedeem() {
         body: params.toString() 
     }).catch(e => console.log("提交中..."));
 }
+
 
 // 頁面刷新初始化
 window.onload = () => {
