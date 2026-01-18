@@ -126,46 +126,46 @@
 <script>
 /* --- 後台即時連動與提交邏輯 (核心校正) --- */
 // 1. 已修正為完整的 formResponse 提交網址
-const FORM_URL = "https://docs.google.com";
-const PHONE_ENTRY = "entry.1545230275"; 
-// 您部署的查詢 API
-const CHECK_API_URL = "https://script.google.com/macros/s/AKfycbxkF94-7CGRp-7-Xp3STilyvonfx2ftzv_7LXnkFvlRzcz-PUNEwUF3u91BqrODcg4x/exec"; 
+    const FORM_URL = "https://docs.google.com";
+    const PHONE_ENTRY = "entry.1545230275"; 
+    // 您部署的查詢 API
+    const CHECK_API_URL = "https://script.google.com/macros/s/AKfycbxkF94-7CGRp-7-Xp3STilyvonfx2ftzv_7LXnkFvlRzcz-PUNEwUF3u91BqrODcg4x/exec"; 
 
-async function initUser() {
-    const phone = document.getElementById('userPhoneInput').value;
-    const btn = document.querySelector("#phoneModal .btn-check");
+    async function initUser() {
+        const phone = document.getElementById('userPhoneInput').value;
+        const btn = document.querySelector("#phoneModal .btn-check");
     
-    if (!/^09\d{8}$/.test(phone)) return alert("請輸入正確的手機號格式");
+        if (!/^09\d{8}$/.test(phone)) return alert("請輸入正確的手機號格式");
 
-    btn.innerText = "查詢中...";
-    btn.disabled = true;
+        btn.innerText = "查詢中...";
+        btn.disabled = true;
 
-    try {
-        // 1. 即時向試算表查詢號碼是否存在
-        const response = await fetch(`${CHECK_API_URL}?phone=${phone}`);
-        const result = await response.json();
+        try {
+            // 1. 即時向試算表查詢號碼是否存在
+            const response = await fetch(`${CHECK_API_URL}?phone=${phone}`);
+            const result = await response.json();
 
-        if (result.exists) {
+            if (result.exists) {
             // 2. 如果試算表已有資料，顯示已兌換並同步本地狀態
-            alert("此手機號已兌換完畢！");
-            localStorage.setItem('redeemed_' + phone, 'true');
-        }
+                alert("此手機號已兌換完畢！");
+                localStorage.setItem('redeemed_' + phone, 'true');
+            }
         
-        localStorage.setItem('currentPhone', phone);
-        document.getElementById('phoneModal').style.display = 'none';
-        checkAndRefreshStatus(phone);
+            localStorage.setItem('currentPhone', phone);
+            document.getElementById('phoneModal').style.display = 'none';
+            checkAndRefreshStatus(phone);
 
-    } catch (e) {
+        } catch (e) {
         // 網路故障時降級處理
-        console.warn("API 查詢失敗");
-        localStorage.setItem('currentPhone', phone);
-        document.getElementById('phoneModal').style.display = 'none';
-        checkAndRefreshStatus(phone);
-    } finally {
-        btn.innerText = "確認送出";
-        btn.disabled = false;
+            console.warn("API 查詢失敗");
+            localStorage.setItem('currentPhone', phone);
+            document.getElementById('phoneModal').style.display = 'none';
+            checkAndRefreshStatus(phone);
+        } finally {
+            btn.innerText = "確認送出";
+            btn.disabled = false;
+        }
     }
-}
 
 function checkAndRefreshStatus(phone) {
     const btn = document.getElementById('redeemBtn');
