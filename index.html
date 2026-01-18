@@ -185,18 +185,21 @@
     </div>
 </div>
     <!-- 回饋表單新畫面層 -->
-<div id="feedbackPage" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #b22020; z-index: 5000; overflow-y: auto; padding: 20px; box-sizing: border-box;">
-    <div style="background: white; border-radius: 15px; padding: 20px; text-align: center; max-width: 500px; margin: 0 auto;">
-        <h2 style="color: #3a2301;">回饋表單</h2>
-        <p>感謝您的參與，請填寫以下資訊：</p>
-        
-        <!-- 這裡是回饋表單的欄位 -->
-        <input type="text" id="feedbackContent" placeholder="請輸入您的建議" style="width: 100%; padding: 10px; margin: 15px 0; border: 1px solid #ccc; border-radius: 5px;">
-        
-        <button onclick="submitFeedback()" style="width: 100%; padding: 12px; background: #e99e9d; color: white; border: none; border-radius: 25px; font-weight: bold;">送出回饋</button>
-        <br><br>
-        <button onclick="document.getElementById('feedbackPage').style.display='none'" style="background: none; border: none; color: #888; text-decoration: underline;">返回遊戲</button>
+<!-- 回饋表單新畫面層 -->
+<div id="feedbackPage" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #b22020; z-index: 5000;">
+    <!-- 頂部關閉導覽列 -->
+    <div style="background: white; padding: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+        <span style="color: #3a2301; font-weight: bold; margin-left: 15px;">填寫回饋表單</span>
+        <button onclick="document.getElementById('feedbackPage').style.display='none'" style="background: #e99e9d; color: white; border: none; padding: 5px 15px; border-radius: 5px; margin-right: 10px;">返回遊戲</button>
     </div>
+    
+    <!-- 內嵌 Google 表單 (請替換下方 src 網址) -->
+    <iframe src="https://docs.google.com" 
+            width="100%" 
+            height="92%" 
+            frameborder="0" 
+            marginheight="0" 
+            marginwidth="0">載入中…</iframe>
 </div>
   
 <script>
@@ -432,11 +435,13 @@ function checkAndRefreshStatus(phone) {
     const isRedeemed = localStorage.getItem('redeemed_' + phone);
     
     if (isRedeemed === 'true') {
-        // 兌換完成後，按鈕轉化為回饋表單功能
+        // 兌換完成後，按鈕轉化為開啟內嵌表單
         btn.innerText = "回饋表單";
-        btn.disabled = false; // 恢復可點擊
-        btn.style.backgroundColor = "#3a2301"; // 換成與標題一致的深棕色
-        btn.onclick = () => document.getElementById('feedbackPage').style.display = 'block';
+        btn.disabled = false;
+        btn.style.backgroundColor = "#3a2301"; 
+        btn.onclick = () => {
+            document.getElementById('feedbackPage').style.display = 'block';
+        };
     } else {
         btn.innerText = "兌換";
         btn.disabled = false;
@@ -444,6 +449,7 @@ function checkAndRefreshStatus(phone) {
         btn.onclick = handleRedeem;
     }
 }
+
 
 // 2. 處理回饋表單提交至 Google [formResponse](https://support.google.com)
 async function submitFeedback() {
