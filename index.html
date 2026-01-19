@@ -285,29 +285,14 @@
 </div>
   
 <script>
-/* --- 兌換鎖定與觸發邏輯 --- */
+let gameProgress = { q1: false, q2: false, q3: false, q4: false };
 
-// 1. 初始化進度 (預設皆為 false)
-let gameProgress = {
-    q1: false,
-    q2: false,
-    q3: false,
-    q4: false
-};
-
-// 2. 通用更新函式：當每一關完成時呼叫此功能
-function updateProgress(stageKey) {
-    gameProgress[stageKey] = true;
-    checkAllLevelsStatus(); // 每次完成關卡都檢查一次總進度
-}
-
-// 3. 檢查總進度並切換按鈕狀態
-function checkAllLevelsStatus() {
+// 統一檢查並更新 UI 的函式
+function checkAllLevelsCleared() {
     const btn = document.getElementById('redeemBtn');
     const phone = localStorage.getItem('currentPhone');
     const isRedeemed = localStorage.getItem('redeemed_' + phone) === 'true';
 
-    // 如果已經兌換過，直接鎖死
     if (isRedeemed) {
         btn.innerText = "已兌換完畢";
         btn.disabled = true;
@@ -315,33 +300,21 @@ function checkAllLevelsStatus() {
         return;
     }
 
-    // 檢查是否四關都完成了
-    const isAllFinished = Object.values(gameProgress).every(v => v === true);
-
-    if (isAllFinished) {
-        btn.innerText = "兌換";
+    // 檢查四關是否全數完成
+    const finishedCount = Object.values(gameProgress).filter(v => v === true).length;
+    
+    if (finishedCount === 4) {
+        btn.innerText = "兌換獎勵";
         btn.disabled = false;
-        btn.style.backgroundColor = "#e99e9d"; // 變回亮色
+        btn.style.backgroundColor = "#e99e9d";
         btn.style.cursor = "pointer";
     } else {
-        btn.innerText = "完成任務後開啟";
+        btn.innerText = `完成任務後解鎖 (${finishedCount}/4)`;
         btn.disabled = true;
-        btn.style.backgroundColor = "#ccc"; // 未完成前灰色
+        btn.style.backgroundColor = "#ccc";
         btn.style.cursor = "not-allowed";
     }
 }
-
-// 4. 修改原本的 handleRedeem，加上最後防線
-function handleRedeem() {
-    const phone = localStorage.getItem('currentPhone');
-    if (!phone) return alert("請先輸入手機號碼");
-    
-    // 再次確認進度（預防 HTML 被手動修改）
-    const isAllFinished = Object.values(gameProgress).every(v => v === true);
-    if (!isAllFinished) {
-        alert("請先完成上方所有關卡喔！");
-        return;
-    }
     
     // 顯示您提供的自定義二次確認彈窗
     document.getElementById('confirmModal').style.display = 'flex';
