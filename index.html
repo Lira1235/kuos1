@@ -285,6 +285,33 @@
 </div>
   
 <script>
+    // 追蹤關卡進度
+let gameProgress = {
+    q1: false,
+    q2: false,
+    q3: false,
+    q4: false
+};
+
+// 檢查是否所有關卡都達成，若達成則解鎖兌換按鈕
+function checkAllLevelsCleared() {
+    const isAllCleared = Object.values(gameProgress).every(status => status === true);
+    const redeemBtn = document.getElementById('redeemBtn');
+    
+    // 只有在還沒兌換過的前提下，才根據進度啟用按鈕
+    const phone = localStorage.getItem('currentPhone');
+    const isRedeemed = localStorage.getItem('redeemed_' + phone) === 'true';
+
+    if (isAllCleared && !isRedeemed) {
+        redeemBtn.disabled = false;
+        redeemBtn.style.backgroundColor = "#e99e9d"; // 恢復亮色
+        redeemBtn.innerText = "兌換";
+    } else if (!isRedeemed) {
+        redeemBtn.disabled = true;
+        redeemBtn.style.backgroundColor = "#ccc";
+        redeemBtn.innerText = "完成任務後解鎖";
+    }
+}
 /* --- 後台即時連動與提交邏輯 (核心校正) --- */
 // 1. 已修正為完整的 formResponse 提交網址
     const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdpnvMA2aDoBGPkT4kXU1CR_EPJ0lvsY0m3VOwVsmEa2wOaMw/formResponse";
