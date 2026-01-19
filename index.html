@@ -222,21 +222,19 @@
 }
 
 /* 說明文字氣泡 */
+/* 修改 info-popup 確保不會橫向擋到地圖 */
 .info-popup {
-    display: none; /* 預設隱藏 */
     position: absolute;
     top: 40px;
-    right: 10px;
-    left: 10px;
-    background: #fffdf7;
-    border: 2px solid #e99e9d;
-    padding: 10px;
-    border-radius: 8px;
-    font-size: 13px;
-    color: #3a2301;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    z-index: 100;
-    line-height: 1.5;
+    right: 0px; 
+    width: 200px; /* 限制寬度，不要讓它延伸到右上角按鈕的下方 */
+    max-width: 80vw;
+    z-index: 2000; /* 低於地圖按鈕的 9999 */
+}
+
+/* 確保地圖按鈕永遠在最上層 */
+#floatingBtn {
+    z-index: 9999 !important;
 }
 
 /* 顯示時的類別 */
@@ -646,11 +644,19 @@ function toggleInfo(stageNum) {
 }
 
 // 點擊關卡其他地方時自動關閉氣泡
+// 點擊關卡其他地方時自動關閉氣泡
 document.addEventListener('click', (e) => {
-    if (!e.target.classList.contains('info-btn') && !e.target.classList.contains('info-popup')) {
+    // 檢查點擊的目標
+    const isInfoBtn = e.target.classList.contains('info-btn');
+    const isInfoPopup = e.target.classList.contains('info-popup');
+    const isFloatingBtn = e.target.id === 'floatingBtn'; // 增加排除地圖按鈕
+
+    // 如果點擊的不是說明按鈕、不是彈出視窗、也不是地圖按鈕，才關閉所有氣泡
+    if (!isInfoBtn && !isInfoPopup && !isFloatingBtn) {
         document.querySelectorAll('.info-popup').forEach(p => p.classList.remove('show'));
     }
 });
+
 </script>
 
 </body>
