@@ -213,13 +213,12 @@
     <div id="quiz3-content">
         <h3>第三關-好運來！</h3>
         <p>投中三個套圈，把數字加起來，抽取新年好運！</p>
-        <input type="number" id="quizInput3" min="1" max="12" placeholder="1-12" style="width: 60px;">
-        <button class="btn-check" onclick="checkAnswer3()">查看成果</button>
+        <input type="number" id="quizInput3" min="1" max="12" placeholder="輸入數字" style="width: 60px;">
+        <button class="btn-check" onclick="checkAnswer3()">抽籤！</button>
     </div>
     <div id="success-content3" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
         <img id="resultImg3" src="" style="width: 100%; height: 100%; object-fit: cover;">
         <!-- 點擊圖片可返回重新輸入 -->
-        <div onclick="document.getElementById('success-content3').style.display='none'" style="position:absolute; bottom:5px; right:5px; background:rgba(0,0,0,0.5); color:white; font-size:10px; padding:2px 5px; border-radius:3px;">返回</div>
     </div>
 </div>
       <div class="grid-item" id="stage4" style="position: relative; padding: 0; overflow: hidden;">
