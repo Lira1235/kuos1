@@ -544,18 +544,23 @@ dragBtn.addEventListener("touchmove", (e) => {
     dragBtn.style.transform = `translate3d(${moveX}px, ${moveY}px, 0)`;
 }, {passive: false});
 
+/* --- 修改原本的按鈕點擊邏輯 --- */
 dragBtn.addEventListener("touchend", () => {
     const duration = Date.now() - startTime;
     if (!isDragging || duration < 150) {
         document.getElementById("imageOverlay").style.display = "flex";
-        document.body.classList.add('no-scroll'); // 禁止底層捲動
+        // 新增：禁止背景捲動
+        document.body.classList.add('no-scroll'); 
     }
 });
 
+/* --- 修改原本的關閉函式 --- */
 function closeImageOverlay() { 
     document.getElementById("imageOverlay").style.display = "none"; 
-    document.body.classList.remove('no-scroll'); // 恢復捲動
+    // 新增：恢復背景捲動
+    document.body.classList.remove('no-scroll'); 
 }
+
 </script>
 
 </body>
