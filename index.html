@@ -544,14 +544,14 @@ dragBtn.addEventListener("touchmove", (e) => {
     // 2. 邊界校正邏輯 (偵測螢幕寬高，防止按鈕超出網站邊框)
     const btnRect = dragBtn.getBoundingClientRect();
     
-    // 計算移動的物理限制
-    // 考慮 CSS 的 top: 30px, right: 20px 設定
-    const minX = -(window.innerWidth - btnRect.width - 20); // 往左最大移動距離
-    const maxX = 20; // 往右最大邊界 (貼齊右側)
-    const minY = -30; // 往上最大邊界 (貼齊頂部)
-    const maxY = window.innerHeight - btnRect.height - 30; // 往下最大邊界 (貼齊底部)
+    // 根據 CSS 設定 (top: 30px, right: 20px) 計算限制
+    // 往左最大移動距離 (視窗寬度 - 按鈕寬度 - 右邊距)
+    const minX = -(window.innerWidth - btnRect.width - 20); 
+    const maxX = 20; // 往右最大邊界
+    const minY = -30; // 往上最大邊界
+    const maxY = window.innerHeight - btnRect.height - 30; // 往下最大邊界
 
-    // 套用限制 (Math.max/min 確保數值在區間內)
+    // 套用 Math.max/min 限制位移量，確保不超出邊框
     moveX = Math.max(minX, Math.min(maxX, rawX));
     moveY = Math.max(minY, Math.min(maxY, rawY));
 
@@ -564,16 +564,15 @@ dragBtn.addEventListener("touchend", () => {
     // 判定點擊：如果沒顯著位移或點擊時間極短，則開啟地圖
     if (!isDragging || duration < 150) {
         imgOverlay.style.display = "flex";
-        document.body.classList.add('no-scroll'); // 禁止背景滾動
+        document.body.style.overflow = "hidden"; // 禁止背景滾動
     }
 });
 
 /* --- 關閉函式 --- */
 function closeImageOverlay() { 
     document.getElementById("imageOverlay").style.display = "none"; 
-    document.body.classList.remove('no-scroll'); // 恢復背景滾動
+    document.body.style.overflow = ""; // 恢復背景滾動
 }
-
 
 </script>
 
