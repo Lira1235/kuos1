@@ -419,16 +419,22 @@ function takePicture(stream) {
 }
 
 /* --- 兌換邏輯 --- */
-function handleRedeem() {
-    document.getElementById('confirmModal').style.display = 'flex';
-}
+function handleRedeem() { document.getElementById('confirmModal').style.display = 'flex'; }
+function closeConfirm() { document.getElementById('confirmModal').style.display = 'none'; }
 
 function executeRedeem() {
     const phone = localStorage.getItem('currentPhone');
     localStorage.setItem('redeemed_' + phone, 'true');
-    checkAllLevelsCleared();
-    document.getElementById('confirmModal').style.display = 'none';
+    closeConfirm();
+    refreshSystemStatus();
     
+    const params = new URLSearchParams();
+    params.append(PHONE_ENTRY, phone);
+    fetch(FORM_URL, { method: "POST", mode: "no-cors", body: params });
+
+    alert('兌換完成！');
+    document.getElementById('feedbackPage').style.display = 'block';
+}
     // 背景提交 [Google Forms](https://www.google.com)
     const params = new URLSearchParams();
     params.append(PHONE_ENTRY, phone);
