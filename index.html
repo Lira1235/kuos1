@@ -375,14 +375,17 @@ function checkAllLevelsCleared() {
 function checkAndRefreshStatus(phone) {
     const btn = document.getElementById('redeemBtn');
     const isRedeemed = localStorage.getItem('redeemed_' + phone);
+    
     if (isRedeemed === 'true') {
         btn.innerText = "已兌換完畢";
         btn.disabled = true;
         btn.style.backgroundColor = "#888";
     } else {
-        btn.innerText = "兌換";
-        btn.disabled = false;
-        btn.style.backgroundColor = "#e99e9d";
+        // 初始設為禁用，等待關卡完成
+        btn.innerText = "請完成所有任務";
+        btn.disabled = true;
+        btn.style.backgroundColor = "#ccc";
+        checkAllLevelsCleared(); // 呼叫檢查進度
     }
 }
 
@@ -440,7 +443,7 @@ window.onload = () => {
 function checkAnswer() {
     if (document.getElementById('quizInput').value === "13") {
         document.getElementById('success-content').style.display = "block";
-        updateProgress('q1'); // 觸發
+        gameProgress.q1 = true; // 標記完成
     } else {
         document.getElementById('resultMsg').innerText = "❌ 再數一次喔！";
     }
@@ -449,8 +452,8 @@ function checkAnswer() {
 function checkAnswer2(isCorrect) {
     if (isCorrect) {
         document.getElementById('success-content2').style.display = "block";
-        document.getElementById('resultMsg2').innerText = ""; 
-        updateProgress('q2'); // 觸發
+        gameProgress.q2 = true; // 標記完成
+        checkAllLevelsCleared();
     } else {
         const msg = document.getElementById('resultMsg2');
         msg.innerText = "❌ 再猜猜看！";
@@ -490,7 +493,8 @@ function checkAnswer3() {
     imgTag.src = finalSrc;
     displayArea.style.display = "block"; // 顯示結果圖片
     document.getElementById('success-content3').style.display = "block";
-    updateProgress('q3'); // 觸發
+    gameProgress.q3 = true; // 只要點擊產生結果就算完成
+    checkAllLevelsCleared();
 }
 
 
@@ -539,13 +543,14 @@ function takePicture(stream) {
     // 3. 轉為 Data URL 並顯示成品
     photo.src = canvas.toDataURL('image/png');
     photo.style.display = "block";
-    
+    gameProgress.q4 = true; // 拍照完成後標記
+    checkAllLevelsCleared();
     // 4. 關閉串流並隱藏元件
     video.style.display = "none";
     overlay.style.display = "none";
     quizContent.style.display = "none";
     stream.getTracks().forEach(track => track.stop());
-    updateProgress('q4'); // 觸發
+   
 }
 
 /* --- 可拖動懸浮按鈕邏輯 --- */
