@@ -499,24 +499,28 @@ const FEEDBACK_ENTRY = "entry.999999999"; // 回饋內容的 ID
 // 1. 修改按鈕狀態刷新邏輯
 function checkAndRefreshStatus(phone) {
     const btn = document.getElementById('redeemBtn');
-    const isRedeemed = localStorage.getItem('redeemed_' + phone);
+    const isRedeemed = localStorage.getItem('redeemed_' + phone) === 'true';
     
-    if (isRedeemed === 'true') {
-        // 兌換完成後，按鈕轉化為開啟內嵌表單
-        btn.innerText = "回饋表單";
+    if (isRedeemed) {
+        btn.innerText = "填寫回饋表單";
         btn.disabled = false;
         btn.style.backgroundColor = "#3a2301"; 
-        btn.onclick = () => {
-            document.getElementById('feedbackPage').style.display = 'block';
-        };
+        btn.onclick = () => document.getElementById('feedbackPage').style.display = 'block';
     } else {
-        btn.innerText = "兌換";
-        btn.disabled = false;
-        btn.style.backgroundColor = "#e99e9d";
-        btn.onclick = handleRedeem;
+        // 確保同時檢查 4 關進度
+        const finishedCount = Object.values(gameProgress).filter(v => v).length;
+        if (finishedCount >= 4) {
+            btn.innerText = "兌換獎勵";
+            btn.disabled = false;
+            btn.style.backgroundColor = "#e99e9d";
+            btn.onclick = handleRedeem;
+        } else {
+            btn.innerText = `完成任務 (${finishedCount}/4)`;
+            btn.disabled = true;
+            btn.style.backgroundColor = "#ccc";
+        }
     }
 }
-
 
 // 2. 處理回饋表單提交至 Google [formResponse](https://support.google.com)
 async function submitFeedback() {
