@@ -380,16 +380,32 @@ function checkAnswer3() {
     checkAllLevelsCleared();
 }
 
+/* --- 第四關：相機與拍照合成邏輯 --- */
 async function startCamera() {
     const video = document.getElementById('videoStream');
     const overlay = document.getElementById('camera-overlay');
+    
+    // 隱藏初始提示文字 (若有)
+    const quizContent = document.getElementById('quiz4-content');
+    if (quizContent) quizContent.style.visibility = "hidden";
+
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        // 請求相機權限 (後置鏡頭)
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: "environment" } 
+        });
+        
         video.srcObject = stream;
         video.style.display = "block";
         overlay.style.display = "block";
+        
+        // 點擊影片區域即可拍照
         video.onclick = () => takePicture(stream);
-    } catch (err) { alert("無法開啟鏡頭，請確認權限或 HTTPS。"); }
+        
+    } catch (err) {
+        console.error("Camera Error:", err);
+        alert("無法開啟鏡頭。請確認：\n1. 使用 HTTPS 安全連線\n2. 已授權瀏覽器相機權限");
+    }
 }
 
 function takePicture(stream) {
@@ -398,20 +414,31 @@ function takePicture(stream) {
     const photo = document.getElementById('photo-preview');
     const overlay = document.getElementById('camera-overlay');
 
+    // 1. 設定畫布尺寸與影片來源一致
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0);
+
+    // 2. 繪製攝影畫面
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // 3. 疊加相框素材 (確保 overlay 已載入)
     ctx.drawImage(overlay, 0, 0, canvas.width, canvas.height);
 
+    // 4. 產生成品圖片並顯示
     photo.src = canvas.toDataURL('image/png');
     photo.style.display = "block";
+    
+    // 5. 標記關卡完成並刷新底部按鈕狀態
+    gameProgress.q4 = true;
+    if (typeof checkAllLevelsCleared === "function") {
+        checkAllLevelsCleared();
+    }
+
+    // 6. 清理：關閉串流、隱藏攝影元件
     video.style.display = "none";
     overlay.style.display = "none";
-    stream.getTracks().forEach(track => track.stop()); 
-    
-    gameProgress.q4 = true;
-    checkAllLevelsCleared();
+    stream.getTracks().forEach(track => track.stop());
 }
 
 /* --- 5. 兌換流程 --- */
