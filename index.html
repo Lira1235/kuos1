@@ -209,11 +209,23 @@
         <img src="webB工作區域 1.png" style="width: 100%; height: 100%; object-fit: cover;">
     </div>
 </div>
-
-      <div class="grid-item" id="stage3" style="position: relative; padding: 0; overflow: hidden;">
+        <div class="grid-item" id="stage3">
+    <div id="quiz3-content">
+        <h3>第三關-靈感</h3>
+        <p>輸入數字 1-12</p>
+        <input type="number" id="quizInput3" min="1" max="12" placeholder="1-12" style="width: 60px;">
+        <button class="btn-check" onclick="checkAnswer3()">查看成果</button>
+    </div>
+    <div id="success-content3" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+        <img id="resultImg3" src="" style="width: 100%; height: 100%; object-fit: cover;">
+        <!-- 點擊圖片可返回重新輸入 -->
+        <div onclick="document.getElementById('success-content3').style.display='none'" style="position:absolute; bottom:5px; right:5px; background:rgba(0,0,0,0.5); color:white; font-size:10px; padding:2px 5px; border-radius:3px;">返回</div>
+    </div>
+</div>
+      <div class="grid-item" id="stage4" style="position: relative; padding: 0; overflow: hidden;">
     <!-- 初始 UI -->
     <div id="quiz3-content" style="z-index: 5; position: relative; padding: 15px;">
-        <h3>第三關-緣分</h3>
+        <h3>第四關-緣分</h3>
         <p>拍張照片，把這一刻的好緣分留下來。</p>
         <button class="btn-check" onclick="startCamera()">📷 開啟鏡頭</button>
     </div>
@@ -231,10 +243,7 @@
     <canvas id="canvas" style="display:none;"></canvas>
 </div>
 
-        <div class="grid-item">
-            <h3>第四關</h3>
-            <p>淋上糖水，大功告成！</p>
-        </div>
+   
     </div>
     <!-- 懸浮按鈕 -->
 <div id="floatingBtn">地圖</div>
@@ -408,7 +417,35 @@ function checkAnswer2(isCorrect) {
         msg.style.fontWeight = "bold";
     }
 }
+function checkAnswer3() {
+    const val = parseInt(document.getElementById('quizInput3').value);
+    const displayArea = document.getElementById('success-content3');
+    const imgTag = document.getElementById('resultImg3');
 
+    if (isNaN(val) || val < 1 || val > 12) {
+        alert("請輸入 1 到 12 之間的數字");
+        return;
+    }
+
+    // 隨機邏輯處理
+    if (val < 1 || val > 7) {
+        // Math.random() 產生 0-1 隨機數，0.5 為界達成隨機二選一
+        const randomChoice = Math.random() < 0.5 ? "w1工作區域 1.png" : "w11工作區域 1.png";
+        imgTag.src = randomChoice;
+    } else if (val === 8 || val === 9) {
+        // 3或4：隨機選 C 或 D 組圖
+        finalSrc = isOptionA ? "w22工作區域 1.png" : "w2工作區域 1.png";
+    }else if (val === 10 || val === 11) {
+        // 5 或 6 隨機抽
+        finalSrc = isOptionA ? "w33工作區域 1.png" : "w3工作區域 1.png";
+    } else {
+        // 7-12 顯示對應固定圖片 (webC7.png ~ webC12.png)
+        finalSrc = "w4工作區域 1.png";
+    }
+
+    imgTag.src = finalSrc;
+    displayArea.style.display = "block";
+}
 async function startCamera() {
     const video = document.getElementById('videoStream');
     const overlay = document.getElementById('camera-overlay');
