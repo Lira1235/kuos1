@@ -285,7 +285,7 @@
 </div>
   
 <script>
-    // 追蹤關卡進度
+  // --- 1. 初始化進度變數 ---
 let gameProgress = {
     q1: false,
     q2: false,
@@ -293,23 +293,36 @@ let gameProgress = {
     q4: false
 };
 
-// 檢查是否所有關卡都達成，若達成則解鎖兌換按鈕
+// --- 2. 核心觸發檢查函式 ---
+function updateProgress(stage) {
+    gameProgress[stage] = true;
+    checkAllLevelsCleared();
+}
+
 function checkAllLevelsCleared() {
-    const isAllCleared = Object.values(gameProgress).every(status => status === true);
-    const redeemBtn = document.getElementById('redeemBtn');
-    
-    // 只有在還沒兌換過的前提下，才根據進度啟用按鈕
     const phone = localStorage.getItem('currentPhone');
     const isRedeemed = localStorage.getItem('redeemed_' + phone) === 'true';
+    const btn = document.getElementById('redeemBtn');
 
-    if (isAllCleared && !isRedeemed) {
-        redeemBtn.disabled = false;
-        redeemBtn.style.backgroundColor = "#e99e9d"; // 恢復亮色
-        redeemBtn.innerText = "兌換";
-    } else if (!isRedeemed) {
-        redeemBtn.disabled = true;
-        redeemBtn.style.backgroundColor = "#ccc";
-        redeemBtn.innerText = "完成任務後解鎖";
+    // 如果已經兌換過，維持鎖定狀態
+    if (isRedeemed) {
+        btn.innerText = "已兌換完畢";
+        btn.disabled = true;
+        btn.style.backgroundColor = "#888";
+        return;
+    }
+
+    // 檢查四關是否都 true
+    const isAllFinished = gameProgress.q1 && gameProgress.q2 && gameProgress.q3 && gameProgress.q4;
+
+    if (isAllFinished) {
+        btn.disabled = false;
+        btn.style.backgroundColor = "#e99e9d"; // 變回亮色
+        btn.innerText = "兌換";
+    } else {
+        btn.disabled = true;
+        btn.style.backgroundColor = "#ccc"; // 未完成時灰色
+        btn.innerText = "完成任務後解鎖";
     }
 }
 /* --- 後台即時連動與提交邏輯 (核心校正) --- */
@@ -423,9 +436,11 @@ window.onload = () => {
 };
 
 /* --- 遊戲關卡邏輯 --- */
+// 第一關
 function checkAnswer() {
     if (document.getElementById('quizInput').value === "13") {
         document.getElementById('success-content').style.display = "block";
+        updateProgress('q1'); // 觸發
     } else {
         document.getElementById('resultMsg').innerText = "❌ 再數一次喔！";
     }
@@ -433,15 +448,13 @@ function checkAnswer() {
 
 function checkAnswer2(isCorrect) {
     if (isCorrect) {
-        // 答對了，顯示成功圖片
         document.getElementById('success-content2').style.display = "block";
         document.getElementById('resultMsg2').innerText = ""; 
+        updateProgress('q2'); // 觸發
     } else {
-        // 答錯了，顯示提示文字
         const msg = document.getElementById('resultMsg2');
         msg.innerText = "❌ 再猜猜看！";
         msg.style.color = "#8b0000";
-        msg.style.fontWeight = "bold";
     }
 }
 function checkAnswer3() {
@@ -476,7 +489,10 @@ function checkAnswer3() {
     // 更新圖片並切換顯示狀態
     imgTag.src = finalSrc;
     displayArea.style.display = "block"; // 顯示結果圖片
+    document.getElementById('success-content3').style.display = "block";
+    updateProgress('q3'); // 觸發
 }
+
 
 /* --- 第四關：相機與拍照合成邏輯 --- */
 async function startCamera() {
@@ -529,6 +545,7 @@ function takePicture(stream) {
     overlay.style.display = "none";
     quizContent.style.display = "none";
     stream.getTracks().forEach(track => track.stop());
+    updateProgress('q4'); // 觸發
 }
 
 /* --- 可拖動懸浮按鈕邏輯 --- */
