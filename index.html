@@ -292,35 +292,35 @@ const CHECK_API_URL = "https://script.google.com/macros/s/AKfycbxkF94-7CGRp-7-Xp
 
 let gameProgress = { q1: false, q2: false, q3: false, q4: false };
 
-// 核心：檢查所有關卡進度並更新按鈕狀態
-function checkAllLevelsCleared() {
+/* --- 2. 介面更新與狀態檢查 --- */
+function refreshSystemStatus() {
     const btn = document.getElementById('redeemBtn');
     const phone = localStorage.getItem('currentPhone');
+    if (!phone) return;
+
     const isRedeemed = localStorage.getItem('redeemed_' + phone) === 'true';
 
     if (isRedeemed) {
-        btn.innerText = "已兌換完畢";
-        btn.disabled = true;
-        btn.style.backgroundColor = "#888";
-        return;
-    }
-
-    // 計算完成關卡數
-    const finishedCount = Object.values(gameProgress).filter(v => v === true).length;
-    
-    if (finishedCount === 4) {
-        btn.innerText = "領取兌換券";
+        btn.innerText = "填寫問卷回饋";
         btn.disabled = false;
-        btn.style.backgroundColor = "#e99e9d";
-        btn.style.cursor = "pointer";
+        btn.style.backgroundColor = "#3a2301";
+        btn.onclick = () => document.getElementById('feedbackPage').style.display = 'block';
     } else {
-        btn.innerText = `完成任務後解鎖 (${finishedCount}/4)`;
-        btn.disabled = true;
-        btn.style.backgroundColor = "#ccc";
+        const finishedCount = Object.values(gameProgress).filter(v => v).length;
+        if (finishedCount >= 4) {
+            btn.innerText = "工作人員兌換";
+            btn.disabled = false;
+            btn.style.backgroundColor = "#e99e9d";
+            btn.onclick = handleRedeem;
+        } else {
+            btn.innerText = `任務進度 (${finishedCount}/4)`;
+            btn.disabled = true;
+            btn.style.backgroundColor = "#ccc";
+        }
     }
 }
 
-/* --- 使用者初始化 --- */
+/* --- 3. 初始化使用者 --- */
 async function initUser() {
     const phoneInput = document.getElementById('userPhoneInput');
     const phone = phoneInput.value;
@@ -334,17 +334,13 @@ async function initUser() {
     try {
         const response = await fetch(`${CHECK_API_URL}?phone=${phone}`);
         const result = await response.json();
-        if (result.exists) {
-            alert("此手機號已兌換過囉！");
-            localStorage.setItem('redeemed_' + phone, 'true');
-        }
-        localStorage.setItem('currentPhone', phone);
-        document.getElementById('phoneModal').style.display = 'none';
-        checkAllLevelsCleared();
+        if (result.exists) localStorage.setItem('redeemed_' + phone, 'true');
     } catch (e) {
+        console.warn("後台查詢失效，切換至本地模式");
+    } finally {
         localStorage.setItem('currentPhone', phone);
         document.getElementById('phoneModal').style.display = 'none';
-        checkAllLevelsCleared();
+        refreshSystemStatus();
     }
 }
 
