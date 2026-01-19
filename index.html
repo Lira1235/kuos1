@@ -398,25 +398,25 @@
 </div>
   
 <script>
-    /* 網頁初始化邏輯 */
+  /* 強制停留在最上方 */
+if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual'; 
+}
+
 window.onload = () => {
-    // 1. 強制滾動到最上方 (x: 0, y: 0)
-    window.scrollTo(0, 0);
+    // 使用 setTimeout 確保在所有 DOM 渲染後執行，達到「直接載入頂部」的效果
+    setTimeout(() => {
+        window.scrollTo(0, 0);
+    }, 0);
 
-    // 2. 顯示手機號碼登入彈窗
     document.getElementById('phoneModal').style.display = 'flex';
-
-    // 3. 讀取上次登入的手機號 (如有)
+    
     const lastPhone = localStorage.getItem('currentPhone');
     if (lastPhone) {
         document.getElementById('userPhoneInput').value = lastPhone;
     }
 };
 
-// 如果您的頁面有使用進度快取，建議也加入這行防止瀏覽器記住上次捲動位置
-if ('scrollRestoration' in history) {
-    history.scrollRestoration = 'manual';
-}
 /* --- 1. 配置與進度變數 --- */
 const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdpnvMA2aDoBGPkT4kXU1CR_EPJ0lvsY0m3VOwVsmEa2wOaMw/formResponse";
 const PHONE_ENTRY = "entry.1545230275"; 
@@ -471,6 +471,14 @@ async function initUser() {
     } finally {
         localStorage.setItem('currentPhone', phone);
         document.getElementById('phoneModal').style.display = 'none';
+        checkAllLevelsCleared();
+    }
+    // 關閉彈窗並瞬間置頂
+    document.getElementById('phoneModal').style.display = 'none';
+    window.scrollTo(0, 0); 
+
+    // 恢復遊戲狀態
+    if (typeof checkAllLevelsCleared === "function") {
         checkAllLevelsCleared();
     }
 }
