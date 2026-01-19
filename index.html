@@ -445,10 +445,12 @@ function checkAnswer3() {
     imgTag.src = finalSrc;
     displayArea.style.display = "block";
 }
+/* --- 第四關：相機與拍照合成邏輯 --- */
 async function startCamera() {
+    // 確保對應到第四關的 ID
     const video = document.getElementById('videoStream');
     const overlay = document.getElementById('camera-overlay');
-    const quizContent = document.getElementById('quiz4-content');
+    const quizContent = document.getElementById('quiz4-content'); // 已修正 ID
     
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -458,11 +460,9 @@ async function startCamera() {
         video.style.display = "block";
         overlay.style.display = "block";
         
-        // 變更文字提示使用者點擊畫面拍照
         quizContent.style.background = "rgba(255,255,255,0.5)";
-        quizContent.innerHTML = "<p style='margin:0; font-weight:bold;'>📷 點擊畫面拍照</p>";
+        quizContent.innerHTML = "<p style='margin:0; font-weight:bold; color:#b22020;'>📷 點擊畫面拍照</p>";
         
-        // 點擊影片區域觸發拍照
         video.onclick = () => takePicture(stream);
     } catch (err) {
         alert("無法開啟相機，請確保使用 HTTPS 環境並允許權限。");
@@ -474,38 +474,38 @@ function takePicture(stream) {
     const overlay = document.getElementById('camera-overlay');
     const canvas = document.getElementById('canvas');
     const photo = document.getElementById('photo-preview');
-    const quizContent = document.getElementById('quiz3-content');
+    const quizContent = document.getElementById('quiz4-content'); // 已修正 ID
 
-    // 設定畫布尺寸與影片一致
+    // 設定畫布尺寸與影片原始像素一致
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
 
-    // 1. 繪製相機畫面
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    // 2. 疊加相框素材
     ctx.drawImage(overlay, 0, 0, canvas.width, canvas.height);
 
-    // 3. 顯示成品
     photo.src = canvas.toDataURL('image/png');
     photo.style.display = "block";
     
-    // 4. 關閉串流與隱格元件
     video.style.display = "none";
     overlay.style.display = "none";
     quizContent.style.display = "none";
+    
+    // 關閉相機串流省電
     stream.getTracks().forEach(track => track.stop());
 }
-    const dragBtn = document.getElementById("floatingBtn");
-const overlay = document.getElementById("imageOverlay");
+
+/* --- 可拖動懸浮按鈕邏輯 --- */
+const dragBtn = document.getElementById("floatingBtn");
+const imgOverlay = document.getElementById("imageOverlay");
 let isDragging = false;
 let startX, startY, moveX = 0, moveY = 0;
 let startTime;
 
-// --- 拖動邏輯 ---
 dragBtn.addEventListener("touchstart", (e) => {
     isDragging = false;
     startTime = Date.now();
+    // 扣除已移動的距離，確保連續拖動不跳位
     startX = e.touches[0].clientX - moveX;
     startY = e.touches[0].clientY - moveY;
 }, {passive: false});
@@ -520,20 +520,16 @@ dragBtn.addEventListener("touchmove", (e) => {
 
 dragBtn.addEventListener("touchend", (e) => {
     const duration = Date.now() - startTime;
-    // 如果移動距離極短且時間短，判定為「點擊」而非「拖動」
+    // 判斷：如果沒移動過或點擊時間極短，則執行「打開說明圖片」
     if (!isDragging || duration < 150) {
-        showImageOverlay();
+        imgOverlay.style.display = "flex";
     }
 });
 
-// --- 顯示/關閉圖片邏輯 ---
-function showImageOverlay() {
-    overlay.style.display = "flex";
+function closeImageOverlay() {
+    imgOverlay.style.display = "none";
 }
 
-function closeImageOverlay() {
-    overlay.style.display = "none";
-}
     /* --- 配置回饋表單後台 --- */
 const FEEDBACK_FORM_URL = "https://docs.google.com";
 const FEEDBACK_ENTRY = "entry.999999999"; // 回饋內容的 ID
