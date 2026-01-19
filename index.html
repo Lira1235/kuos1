@@ -201,7 +201,49 @@
 .no-scroll {
     overflow: hidden;
 }
+/* 關卡說明按鈕 (?) */
+.info-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 24px;
+    height: 24px;
+    background-color: rgba(58, 35, 1, 0.6); /* 半透明咖啡色 */
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 10;
+    border: 1px solid rgba(255,255,255,0.5);
+}
 
+/* 說明文字氣泡 */
+.info-popup {
+    display: none; /* 預設隱藏 */
+    position: absolute;
+    top: 40px;
+    right: 10px;
+    left: 10px;
+    background: #fffdf7;
+    border: 2px solid #e99e9d;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #3a2301;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    z-index: 100;
+    line-height: 1.5;
+}
+
+/* 顯示時的類別 */
+.info-popup.show {
+    display: block;
+    animation: fadeIn 0.2s ease;
+}
     </style>
 </head>
 <body>
@@ -220,6 +262,10 @@
     <div class="grid-container">
         <!-- 遊戲關卡維持不變 -->
         <div class="grid-item" id="stage1">
+             <div class="info-btn" onclick="toggleInfo(1)">?</div>
+    <div id="info-1" class="info-popup" onclick="this.classList.remove('show')">
+        💡 提示：仔細觀察背景與插畫細節，有的「福」字藏在不顯眼的地方喔！
+    </div>
             <div id="quiz-content">
                 <h3>第一關-福氣到！</h3>
                 <p>請找找看，畫面中一共有幾個「福」字？</p>
@@ -234,6 +280,10 @@
 
       <div class="grid-item" id="stage2" style="padding:0;">
     <div id="quiz2-content" style="padding:15px;">
+         <div class="info-btn" onclick="toggleInfo(1)">?</div>
+    <div id="info-1" class="info-popup" onclick="this.classList.remove('show')">
+        💡 提示：仔細觀察背景與插畫細節，有的「福」字藏在不顯眼的地方喔！
+    </div>
         <h3>第二關-功名到！</h3>
         <p>請選出代表功名順利的圖案</p>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px;">
@@ -250,6 +300,10 @@
     </div>
 </div>
         <div class="grid-item" id="stage3">
+             <div class="info-btn" onclick="toggleInfo(1)">?</div>
+    <div id="info-1" class="info-popup" onclick="this.classList.remove('show')">
+        💡 提示：仔細觀察背景與插畫細節，有的「福」字藏在不顯眼的地方喔！
+    </div>
     <div id="quiz3-content">
         <h3>第三關-好運來！</h3>
         <p>投中三個套圈，把數字加起來，抽取新年好運！</p>
@@ -263,6 +317,10 @@
 </div>
      <!-- 第四關：相機與拍照合成 -->
 <div class="grid-item" id="stage4" style="position: relative; padding: 0; overflow: hidden; min-height: 250px;">
+   <div class="info-btn" onclick="toggleInfo(1)">?</div>
+    <div id="info-1" class="info-popup" onclick="this.classList.remove('show')">
+        💡 提示：仔細觀察背景與插畫細節，有的「福」字藏在不顯眼的地方喔！
+    </div>
     <!-- 初始 UI 層 -->
     <div id="quiz4-content" style="z-index: 5; position: relative; padding: 15px;">
         <h3>第四關-緣分到！</h3>
@@ -382,7 +440,26 @@ async function initUser() {
         checkAllLevelsCleared();
     }
 }
+/* 控制關卡說明彈窗 */
+function toggleInfo(stageNum) {
+    // 先關閉所有其他的說明氣泡
+    document.querySelectorAll('.info-popup').forEach(popup => {
+        if (popup.id !== `info-${stageNum}`) {
+            popup.classList.remove('show');
+        }
+    });
+    
+    // 切換當前關卡的說明氣泡
+    const target = document.getElementById(`info-${stageNum}`);
+    target.classList.toggle('show');
+}
 
+// 點擊關卡其他地方時自動關閉氣泡
+document.addEventListener('click', (e) => {
+    if (!e.target.classList.contains('info-btn') && !e.target.classList.contains('info-popup')) {
+        document.querySelectorAll('.info-popup').forEach(p => p.classList.remove('show'));
+    }
+});
 /* --- 4. 遊戲關卡邏輯 --- */
 function checkAnswer() {
     if (document.getElementById('quizInput').value === "13") {
