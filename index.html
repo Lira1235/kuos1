@@ -547,6 +547,37 @@ function takePicture(stream) {
     stream.getTracks().forEach(track => track.stop());
    
 }
+    function handleRedeem() {
+    // 最終防線：若未完成四關則不彈窗
+    if (Object.values(gameProgress).filter(v => v).length < 4) {
+        return alert("請先完成上方所有任務！");
+    }
+    document.getElementById('confirmModal').style.display = 'flex';
+}
+
+function executeRedeem() {
+    const phone = localStorage.getItem('currentPhone');
+    localStorage.setItem('redeemed_' + phone, 'true');
+    
+    // 更新按鈕為已兌換
+    checkAllLevelsCleared();
+    document.getElementById('confirmModal').style.display = 'none';
+    alert('兌換完成！');
+
+    // 延遲後自動顯示回饋表單 [Google Forms](https://www.google.com)
+    setTimeout(() => {
+        document.getElementById('feedbackPage').style.display = 'block';
+    }, 800);
+
+    // 背景提交數據
+    const params = new URLSearchParams();
+    params.append("entry.1545230275", phone);
+    fetch("https://docs.google.com/forms/d/e/1FAIpQLSdpnvMA2aDoBGPkT4kXU1CR_EPJ0lvsY0m3VOwVsmEa2wOaMw/formResponse", { 
+        method: "POST", mode: "no-cors", body: params 
+    });
+}
+
+function closeConfirm() { document.getElementById('confirmModal').style.display = 'none'; }
 
 /* --- 可拖動懸浮按鈕邏輯 --- */
 const dragBtn = document.getElementById("floatingBtn");
