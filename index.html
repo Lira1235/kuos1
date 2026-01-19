@@ -132,36 +132,38 @@
         .btn-check { margin-top: 10px; background-color: #e99e9d; color: white; border: none; padding: 8px 15px; border-radius: 10px; cursor: pointer; font-weight: bold; }
         #resultMsg, #resultMsg2 { font-size: 11px; margin-top: 5px; min-height: 15px; }
         #videoStream, #camera-overlay, #photo-preview { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: fill; }
- /* 圓形懸浮按鈕 - 初始位置改為右上角 */
-#floatingBtn {
-    position: fixed;
-    top: 20px;             /* 距離頂部 20px */
-    right: 20px;           /* 距離右側 20px */
-    width: 60px; height: 60px;
-    background-color: #3a2301;
-    color: white;
-    border-radius: 50%;
-    display: flex; justify-content: center; align-items: center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    cursor: move; z-index: 1000 !important;
-    touch-action: none; user-select: none;
-    font-size: 14px; font-weight: bold;
-}
-/* 圖片彈出層遮罩 */
+/* 修改遮罩層，加入淡入效果 */
 #imageOverlay {
     position: fixed; top: 0; left: 0;
     width: 100%; height: 100%;
-    background: rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.85);
     display: none; justify-content: center; align-items: center;
     z-index: 3000 !important;
+    backdrop-filter: blur(3px); /* 背景微模糊，更有質感 */
+    animation: fadeIn 0.3s ease; /* 彈出動畫 */
 }
 
-/* 彈出的圖片樣式 */
+/* 圖片樣式優化 */
 #popupImage {
-    max-width: 90%; max-height: 90%;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(255,255,255,0.2);
+    max-width: 90%; 
+    max-height: 85%;
+    border-radius: 12px;
+    border: 3px solid #fff; /* 加入白框，與背景區隔 */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    object-fit: contain;
 }
+
+/* 淡入動畫定義 */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* 當地圖開啟時，禁止背景捲動的輔助類別 (需配合 JS) */
+.no-scroll {
+    overflow: hidden;
+}
+
     </style>
 </head>
 <body>
@@ -504,20 +506,18 @@ dragBtn.addEventListener("touchmove", (e) => {
     dragBtn.style.transform = `translate3d(${moveX}px, ${moveY}px, 0)`;
 }, {passive: false});
 
-dragBtn.addEventListener("touchend", (e) => {
+dragBtn.addEventListener("touchend", () => {
     const duration = Date.now() - startTime;
-    // 判斷位移量是否極小 (例如小於 5px) 或時間極短
-    const moveDist = Math.sqrt(moveX*moveX + moveY*moveY);
-    
     if (!isDragging || duration < 150) {
-        imgOverlay.style.display = "flex";
+        document.getElementById("imageOverlay").style.display = "flex";
+        document.body.classList.add('no-scroll'); // 禁止底層捲動
     }
 });
 
-function closeImageOverlay() {
-    imgOverlay.style.display = "none";
+function closeImageOverlay() { 
+    document.getElementById("imageOverlay").style.display = "none"; 
+    document.body.classList.remove('no-scroll'); // 恢復捲動
 }
-
 </script>
 
 </body>
