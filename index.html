@@ -481,7 +481,6 @@ function executeRedeem() {
 const dragBtn = document.getElementById("floatingBtn");
 const imgOverlay = document.getElementById("imageOverlay");
 
-// 追蹤位移量
 let isDragging = false;
 let startX, startY, moveX = 0, moveY = 0;
 let startTime;
@@ -489,31 +488,32 @@ let startTime;
 dragBtn.addEventListener("touchstart", (e) => {
     isDragging = false;
     startTime = Date.now();
-    // 取得初始觸控點
+    // 取得觸控點相對位移
     startX = e.touches[0].clientX - moveX;
     startY = e.touches[0].clientY - moveY;
 }, {passive: false});
 
 dragBtn.addEventListener("touchmove", (e) => {
     isDragging = true;
-    e.preventDefault(); // 防止畫面隨手指滾動
+    e.preventDefault(); 
     
     moveX = e.touches[0].clientX - startX;
     moveY = e.touches[0].clientY - startY;
     
-    // 套用位移
+    // 套用硬體加速位移
     dragBtn.style.transform = `translate3d(${moveX}px, ${moveY}px, 0)`;
 }, {passive: false});
 
-dragBtn.addEventListener("touchend", () => {
+dragBtn.addEventListener("touchend", (e) => {
     const duration = Date.now() - startTime;
-    // 如果沒有明顯拖動或是短暫點擊，則開啟地圖
+    // 判斷位移量是否極小 (例如小於 5px) 或時間極短
+    const moveDist = Math.sqrt(moveX*moveX + moveY*moveY);
+    
     if (!isDragging || duration < 150) {
         imgOverlay.style.display = "flex";
     }
 });
 
-// 關閉地圖函式
 function closeImageOverlay() {
     imgOverlay.style.display = "none";
 }
