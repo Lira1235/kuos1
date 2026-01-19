@@ -459,35 +459,36 @@ async function initUser() {
     
     if (!/^09\d{8}$/.test(phone)) return alert("請輸入正確的手機號格式");
 
-    btn.innerText = "登入中...";
+    btn.innerText = "查詢中...";
     btn.disabled = true;
 
     try {
-        // 1. 先背景提交到 Google 表單 (記錄登入，解決您說的沒手機號問題)
+        // --- 核心修正：登入時先提交一筆紀錄到 Google 表單 ---
         const params = new URLSearchParams();
-        params.append(PHONE_ENTRY, phone);
-        fetch(FORM_URL, { method: "POST", mode: "no-cors", body: params });
+        params.append(PHONE_ENTRY, phone); // 提交到您的 entry.1545230275
+        
+        fetch(FORM_URL, { 
+            method: "POST", 
+            mode: "no-cors", 
+            body: params.toString() 
+        });
 
-        // 2. 查詢 API 檢查是否已兌換過
+        // 查詢 API 是否兌換過
         const response = await fetch(`${CHECK_API_URL}?phone=${phone}`);
         const result = await response.json();
-        if (result.exists) {
-            localStorage.setItem('redeemed_' + phone, 'true');
-        }
+        if (result.exists) localStorage.setItem('redeemed_' + phone, 'true');
+
     } catch (e) {
-        console.warn("API連線失敗，切換至本地模式");
+        console.warn("API連線失敗，進入本地模式");
     } finally {
-        // 3. 儲存至本地並置頂頁面
         localStorage.setItem('currentPhone', phone);
         document.getElementById('phoneModal').style.display = 'none';
         
-        // 確保頁面載入就在最上方
+        // 瞬間置頂
         window.scrollTo(0, 0); 
-        
         checkAllLevelsCleared();
     }
 }
-
 /* --- 4. 遊戲關卡邏輯 --- */
 function checkAnswer() {
     if (document.getElementById('quizInput').value === "13") {
