@@ -463,32 +463,32 @@ async function initUser() {
     btn.disabled = true;
 
     try {
-        // --- 核心修正：登入時先提交一筆紀錄到 Google 表單 ---
-        const params = new URLSearchParams();
-        params.append(PHONE_ENTRY, phone); // 提交到您的 entry.1545230275
-        
+        // 1. 強制提交：確保資料編碼正確
+        const formData = new URLSearchParams();
+        formData.append(PHONE_ENTRY = "entry.1545230275); // 確保 PHONE_ENTRY = 'entry.xxxxxx'
+
         fetch(FORM_URL, { 
             method: "POST", 
             mode: "no-cors", 
-            body: params.toString() 
+            headers: { "Content-Type": "application/x-www-form-urlencoded" }, // 必須指定格式
+            body: formData.toString() 
         });
 
-        // 查詢 API 是否兌換過
+        // 2. 查詢 API
         const response = await fetch(`${CHECK_API_URL}?phone=${phone}`);
         const result = await response.json();
         if (result.exists) localStorage.setItem('redeemed_' + phone, 'true');
 
     } catch (e) {
-        console.warn("API連線失敗，進入本地模式");
+        console.warn("API連線失敗");
     } finally {
         localStorage.setItem('currentPhone', phone);
         document.getElementById('phoneModal').style.display = 'none';
-        
-        // 瞬間置頂
         window.scrollTo(0, 0); 
         checkAllLevelsCleared();
     }
 }
+
 /* --- 4. 遊戲關卡邏輯 --- */
 function checkAnswer() {
     if (document.getElementById('quizInput').value === "13") {
