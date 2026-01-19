@@ -220,36 +220,39 @@
     z-index: 10;
     border: 1px solid rgba(255,255,255,0.5);
 }
-
-/* 說明文字氣泡 - 縮窄寬度並優化位置 */
 /* 說明文字氣泡 - 確保在關卡框內且不被裁切 */
 .info-popup {
-    display: none;
+    /* 1. 預設狀態 (隱藏且稍微往下掉) */
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, -10px); /* 水平置中，但垂直往上一點點 */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* 使用貝茲曲線更自然 */
+
+    /* 2. 定位與外觀 */
     position: absolute;
-    
-    /* 水平居中核心設定 */
-    top: 45px;            /* 在 ? 按鈕下方一點 */
-    left: 50%;            /* 移至關卡中間 */
-    transform: translateX(-50%); /* 往回推一半，達成精確居中 */
-    
-    /* 寬度設定：佔關卡寬度的 90%，確保左右都有留白不貼邊 */
-    width: 70%;           
-    max-width: 280px;     /* 避免在大螢幕上過寬 */
-    
+    top: 45px;
+    left: 50%;
+    width: 70%;
+    max-width: 280px;
     background: #fffdf7;
     border: 2px solid #e99e9d;
     padding: 10px 15px;
-    border-radius: 8px;
+    border-radius: 12px; /* 圓角稍微大一點更現代 */
     font-size: 13px;
     color: #3a2301;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    
-    /* 層級設定 */
-    z-index: 5000;        /* 高於地圖按鈕，低於地圖大遮罩 */
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    z-index: 5000;
     line-height: 1.5;
-    pointer-events: auto; /* 確保內容可被點擊 */
+    pointer-events: none; /* 隱藏時點擊穿透，不擋住下方 */
 }
 
+/* 3. 顯示狀態 (淡入並回位) */
+.info-popup.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, 0); /* 回到原始位置 */
+    pointer-events: auto; /* 顯示時可以被點擊 */
+}
 /* 顯示類別 */
 .info-popup.show {
     display: block;
@@ -672,19 +675,19 @@ function toggleInfo(stageNum) {
     target.classList.toggle('show');
 }
 
-// 點擊關卡其他地方時自動關閉氣泡
-// 點擊關卡其他地方時自動關閉氣泡
-document.addEventListener('click', (e) => {
-    // 檢查點擊的目標
+document.addEventListener('touchstart', (e) => {
+    // 檢查點擊目標
     const isInfoBtn = e.target.classList.contains('info-btn');
     const isInfoPopup = e.target.classList.contains('info-popup');
-    const isFloatingBtn = e.target.id === 'floatingBtn'; // 增加排除地圖按鈕
+    const isFloatingBtn = e.target.id === 'floatingBtn' || e.target.closest('#floatingBtn');
 
-    // 如果點擊的不是說明按鈕、不是彈出視窗、也不是地圖按鈕，才關閉所有氣泡
+    // 只有在「不是」點擊問號、氣泡、地圖按鈕時，才關閉氣泡
     if (!isInfoBtn && !isInfoPopup && !isFloatingBtn) {
-        document.querySelectorAll('.info-popup').forEach(p => p.classList.remove('show'));
+        document.querySelectorAll('.info-popup').forEach(p => {
+            p.classList.remove('show');
+        });
     }
-});
+}, { passive: true });
 
 </script>
 
