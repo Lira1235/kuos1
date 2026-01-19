@@ -477,26 +477,33 @@ function executeRedeem() {
     document.getElementById('feedbackPage').style.display = 'block';
 }
 
-/* --- 6. 懸浮按鈕邏輯 --- */
 const dragBtn = document.getElementById("floatingBtn");
 let isDragging = false, startX, startY, moveX = 0, moveY = 0, startTime;
 
 dragBtn.addEventListener("touchstart", (e) => {
     isDragging = false;
     startTime = Date.now();
+    // 取得當前觸控點相對於按鈕已位移量的起始位置
     startX = e.touches[0].clientX - moveX;
     startY = e.touches[0].clientY - moveY;
 }, {passive: false});
 
 dragBtn.addEventListener("touchmove", (e) => {
     isDragging = true;
+    e.preventDefault(); // 阻止螢幕跟著滾動
+    
+    // 計算移動距離
     moveX = e.touches[0].clientX - startX;
     moveY = e.touches[0].clientY - startY;
+    
+    // 使用 translate3d 效能較佳
     dragBtn.style.transform = `translate3d(${moveX}px, ${moveY}px, 0)`;
 }, {passive: false});
 
-dragBtn.addEventListener("touchend", () => {
-    if (!isDragging || (Date.now() - startTime < 150)) {
+dragBtn.addEventListener("touchend", (e) => {
+    const duration = Date.now() - startTime;
+    // 判斷：如果移動位移極小或是點擊時間極短（小於150ms），視為點擊
+    if (!isDragging || duration < 150) {
         document.getElementById("imageOverlay").style.display = "flex";
     }
 });
@@ -505,10 +512,16 @@ function closeImageOverlay() {
     document.getElementById("imageOverlay").style.display = "none"; 
 }
 
+// 修正後的 onload 確保狀態同步
 window.onload = () => { 
-    document.getElementById('phoneModal').style.display = 'flex'; 
+    document.getElementById('phoneModal').style.display = 'flex';
+    // 如果有舊的手機號碼，自動帶入
+    const lastPhone = localStorage.getItem('currentPhone');
+    if (lastPhone) {
+        document.getElementById('userPhoneInput').value = lastPhone;
+        // 建議此處同時呼叫一次 checkAllLevelsCleared() 以恢復按鈕狀態
+    }
 };
-
 </script>
 
 </body>
