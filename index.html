@@ -285,9 +285,14 @@
 </div>
   
 <script>
+/* --- 全域配置與進度 --- */
+const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdpnvMA2aDoBGPkT4kXU1CR_EPJ0lvsY0m3VOwVsmEa2wOaMw/formResponse";
+const PHONE_ENTRY = "entry.1545230275"; 
+const CHECK_API_URL = "https://script.google.com/macros/s/AKfycbxkF94-7CGRp-7-Xp3STilyvonfx2ftzv_7LXnkFvlRzcz-PUNEwUF3u91BqrODcg4x/exec"; 
+
 let gameProgress = { q1: false, q2: false, q3: false, q4: false };
 
-// 統一檢查並更新 UI 的函式
+// 核心：檢查所有關卡進度並更新按鈕狀態
 function checkAllLevelsCleared() {
     const btn = document.getElementById('redeemBtn');
     const phone = localStorage.getItem('currentPhone');
@@ -300,11 +305,11 @@ function checkAllLevelsCleared() {
         return;
     }
 
-    // 檢查四關是否全數完成
+    // 計算完成關卡數
     const finishedCount = Object.values(gameProgress).filter(v => v === true).length;
     
     if (finishedCount === 4) {
-        btn.innerText = "兌換獎勵";
+        btn.innerText = "領取兌換券";
         btn.disabled = false;
         btn.style.backgroundColor = "#e99e9d";
         btn.style.cursor = "pointer";
@@ -312,22 +317,11 @@ function checkAllLevelsCleared() {
         btn.innerText = `完成任務後解鎖 (${finishedCount}/4)`;
         btn.disabled = true;
         btn.style.backgroundColor = "#ccc";
-        btn.style.cursor = "not-allowed";
     }
 }
-    
-    // 顯示您提供的自定義二次確認彈窗
-    document.getElementById('confirmModal').style.display = 'flex';
-}
 
-/* --- 後台即時連動與提交邏輯 (核心校正) --- */
-// 1. 已修正為完整的 formResponse 提交網址
-    const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdpnvMA2aDoBGPkT4kXU1CR_EPJ0lvsY0m3VOwVsmEa2wOaMw/formResponse";
-    const PHONE_ENTRY = "entry.1545230275"; 
-    // 您部署的查詢 API
-    const CHECK_API_URL = "https://script.google.com/macros/s/AKfycbxkF94-7CGRp-7-Xp3STilyvonfx2ftzv_7LXnkFvlRzcz-PUNEwUF3u91BqrODcg4x/exec"; 
-
-   async function initUser() {
+/* --- 使用者初始化 --- */
+async function initUser() {
     const phoneInput = document.getElementById('userPhoneInput');
     const phone = phoneInput.value;
     const btn = document.querySelector("#phoneModal .btn-check");
@@ -337,238 +331,122 @@ function checkAllLevelsCleared() {
     btn.innerText = "查詢中...";
     btn.disabled = true;
 
-    // 設定 5 秒超時，防止 API 沒反應導致按鈕卡死
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
-
     try {
-        const response = await fetch(`${CHECK_API_URL}?phone=${phone}`, { signal: controller.signal });
+        const response = await fetch(`${CHECK_API_URL}?phone=${phone}`);
         const result = await response.json();
-
         if (result.exists) {
-            alert("此手機號已兌換完畢！");
+            alert("此手機號已兌換過囉！");
             localStorage.setItem('redeemed_' + phone, 'true');
         }
-        
         localStorage.setItem('currentPhone', phone);
         document.getElementById('phoneModal').style.display = 'none';
-        checkAndRefreshStatus(phone);
-
+        checkAllLevelsCleared();
     } catch (e) {
-        // 如果 API 報錯或超時，直接讓使用者進入
-        console.warn("後台查詢失敗，切換至本地模式", e);
         localStorage.setItem('currentPhone', phone);
         document.getElementById('phoneModal').style.display = 'none';
-        checkAndRefreshStatus(phone);
-    } finally {
-        clearTimeout(timeoutId);
-        btn.innerText = "確認送出";
-        btn.disabled = false;
+        checkAllLevelsCleared();
     }
 }
-
-function checkAndRefreshStatus(phone) {
-    const btn = document.getElementById('redeemBtn');
-    const isRedeemed = localStorage.getItem('redeemed_' + phone);
-    
-    if (isRedeemed === 'true') {
-        btn.innerText = "已兌換完畢";
-        btn.disabled = true;
-        btn.style.backgroundColor = "#888";
-    } else {
-        // 初始設為禁用，等待關卡完成
-        btn.innerText = "請完成所有任務";
-        btn.disabled = true;
-        btn.style.backgroundColor = "#ccc";
-        checkAllLevelsCleared(); // 呼叫檢查進度
-    }
-}
-
-// 1. 點擊底部「兌換」按鈕時觸發
-function handleRedeem() {
-    const phone = localStorage.getItem('currentPhone');
-    if (!phone) return alert("請先輸入手機號碼");
-    
-    // 顯示自定義的二次確認彈窗
-    document.getElementById('confirmModal').style.display = 'flex';
-}
-
-// 2. 關閉彈窗
-function closeConfirm() {
-    document.getElementById('confirmModal').style.display = 'none';
-}
-
-// 3. 真正執行兌換 (由彈窗內的「工作人員確認」按鈕觸發)
-function executeRedeem() {
-    const phone = localStorage.getItem('currentPhone');
-    
-    // 執行兌換流程
-    localStorage.setItem('redeemed_' + phone, 'true');
-    checkAndRefreshStatus(phone);
-    
-    // 關閉彈窗並提示完成
-    closeConfirm();
-    alert('兌換完成');
-
-    // 提交到 [Google Forms formResponse](https://support.google.com)
-    const params = new URLSearchParams();
-    params.append(PHONE_ENTRY, phone);
-    
-    fetch(FORM_URL, { 
-        method: "POST", 
-        mode: "no-cors", 
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: params.toString() 
-    }).catch(e => console.log("提交中..."));
-}
-
-
-
-// 頁面刷新初始化
-window.onload = () => {
-    document.getElementById('phoneModal').style.display = 'flex';
-    const lastPhone = localStorage.getItem('currentPhone');
-    if (lastPhone) {
-        document.getElementById('userPhoneInput').value = lastPhone;
-    }
-};
 
 /* --- 遊戲關卡邏輯 --- */
 // 第一關
-function checkAnswer() {
+function checkAnswer() { // 第一關
     if (document.getElementById('quizInput').value === "13") {
         document.getElementById('success-content').style.display = "block";
-        gameProgress.q1 = true; // 標記完成
+        gameProgress.q1 = true;
+        checkAllLevelsCleared();
     } else {
         document.getElementById('resultMsg').innerText = "❌ 再數一次喔！";
     }
 }
-
-function checkAnswer2(isCorrect) {
+function checkAnswer2(isCorrect) { // 第二關
     if (isCorrect) {
         document.getElementById('success-content2').style.display = "block";
-        gameProgress.q2 = true; // 標記完成
+        gameProgress.q2 = true;
         checkAllLevelsCleared();
     } else {
-        const msg = document.getElementById('resultMsg2');
-        msg.innerText = "❌ 再猜猜看！";
-        msg.style.color = "#8b0000";
+        document.getElementById('resultMsg2').innerText = "❌ 再猜猜看！";
+        document.getElementById('resultMsg2').style.color = "#8b0000";
     }
 }
-function checkAnswer3() {
+
+function checkAnswer3() { // 第三關
     const val = parseInt(document.getElementById('quizInput3').value);
-    const displayArea = document.getElementById('success-content3');
-    const quizDiv = document.getElementById('quiz3-content');
+    if (isNaN(val) || val < 1 || val > 12) return alert("請輸入 1-12 數字");
+    
     const imgTag = document.getElementById('resultImg3');
-
-    if (isNaN(val) || val < 1 || val > 12) {
-        alert("請輸入 1 到 12 之間的數字");
-        return;
-    }
-
-    let finalSrc = "";
-    // 產生隨機布林值，用於二選一
     const isOptionA = Math.random() < 0.5;
+    if (val <= 7) imgTag.src = isOptionA ? "w1工作區域 1.png" : "w11工作區域 1.png";
+    else if (val <= 9) imgTag.src = isOptionA ? "w2工作區域 1.png" : "w22工作區域 1.png";
+    else if (val <= 11) imgTag.src = isOptionA ? "w3工作區域 1.png" : "w33工作區域 1.png";
+    else imgTag.src = "w4工作區域 1.png";
 
-    if (val >= 1 && val <= 7) {
-        // 1-7：隨機二選一 (w1 或 w11)
-        finalSrc = isOptionA ? "w1工作區域 1.png" : "w11工作區域 1.png";
-    } else if (val === 8 || val === 9) {
-        // 8 或 9：隨機選 w2 或 w22
-        finalSrc = isOptionA ? "w2工作區域 1.png" : "w22工作區域 1.png";
-    } else if (val === 10 || val === 11) {
-        // 10 或 11：隨機選 w3 或 w33
-        finalSrc = isOptionA ? "w3工作區域 1.png" : "w33工作區域 1.png";
-    } else {
-        // 12 (或其他)：固定顯示 w4
-        finalSrc = "w4工作區域 1.png";
-    }
-
-    // 更新圖片並切換顯示狀態
-    imgTag.src = finalSrc;
-    displayArea.style.display = "block"; // 顯示結果圖片
     document.getElementById('success-content3').style.display = "block";
-    gameProgress.q3 = true; // 只要點擊產生結果就算完成
+    gameProgress.q3 = true;
     checkAllLevelsCleared();
 }
-
-
-/* --- 第四關：相機與拍照合成邏輯 --- */
+/* --- 第四關：相機與拍照 --- */
 async function startCamera() {
     const video = document.getElementById('videoStream');
     const overlay = document.getElementById('camera-overlay');
-    const quizContent = document.getElementById('quiz4-content');
-    
     try {
-        // 調用 [MediaDevices.getUserMedia](https://developer.mozilla.org)
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: "environment" } 
-        });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
         video.srcObject = stream;
         video.style.display = "block";
         overlay.style.display = "block";
-        
-        // 變更提示文字
-        quizContent.style.background = "rgba(255,255,255,0.6)";
-        quizContent.innerHTML = "<p style='margin:0; font-weight:bold; color:#b22020;'>📷 點擊畫面拍照</p>";
-        
-        // 綁定點擊影片拍照事件
         video.onclick = () => takePicture(stream);
     } catch (err) {
-        alert("無法啟動相機。請檢查是否使用 HTTPS 安全連線，並已允許權限。");
+        alert("無法開啟鏡頭，請確認權限或使用 HTTPS。");
     }
 }
 
 function takePicture(stream) {
     const video = document.getElementById('videoStream');
-    const overlay = document.getElementById('camera-overlay');
     const canvas = document.getElementById('canvas');
     const photo = document.getElementById('photo-preview');
-    const quizContent = document.getElementById('quiz4-content');
+    const overlay = document.getElementById('camera-overlay');
 
-    // 精確對齊畫布與影片像素
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
-
-    // 1. 繪製攝影畫面 2. 疊加相框 (webC工作區域 1.png)
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(video, 0, 0);
     ctx.drawImage(overlay, 0, 0, canvas.width, canvas.height);
 
-    // 3. 轉為 Data URL 並顯示成品
     photo.src = canvas.toDataURL('image/png');
     photo.style.display = "block";
-    gameProgress.q4 = true; // 拍照完成後標記
-    checkAllLevelsCleared();
-    // 4. 關閉串流並隱藏元件
     video.style.display = "none";
     overlay.style.display = "none";
-    quizContent.style.display = "none";
     stream.getTracks().forEach(track => track.stop());
-   
+    
+    gameProgress.q4 = true;
+    checkAllLevelsCleared();
 }
-    function handleRedeem() {
-    // 最終防線：若未完成四關則不彈窗
-    if (Object.values(gameProgress).filter(v => v).length < 4) {
-        return alert("請先完成上方所有任務！");
-    }
+
+/* --- 兌換邏輯 --- */
+function handleRedeem() {
     document.getElementById('confirmModal').style.display = 'flex';
 }
 
 function executeRedeem() {
     const phone = localStorage.getItem('currentPhone');
     localStorage.setItem('redeemed_' + phone, 'true');
-    
-    // 更新按鈕為已兌換
     checkAllLevelsCleared();
     document.getElementById('confirmModal').style.display = 'none';
-    alert('兌換完成！');
+    
+    // 背景提交 [Google Forms](https://www.google.com)
+    const params = new URLSearchParams();
+    params.append(PHONE_ENTRY, phone);
+    fetch(FORM_URL, { method: "POST", mode: "no-cors", body: params });
 
-    // 延遲後自動顯示回饋表單 [Google Forms](https://www.google.com)
-    setTimeout(() => {
-        document.getElementById('feedbackPage').style.display = 'block';
-    }, 800);
+    alert('兌換完成！請填寫意見表單。');
+    document.getElementById('feedbackPage').style.display = 'block';
+}
 
+function closeConfirm() { document.getElementById('confirmModal').style.display = 'none'; }
+
+window.onload = () => {
+    document.getElementById('phoneModal').style.display = 'flex';
+};
     // 背景提交數據
     const params = new URLSearchParams();
     params.append("entry.1545230275", phone);
