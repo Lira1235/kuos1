@@ -560,6 +560,51 @@ function closeImageOverlay() {
     // 新增：恢復背景捲動
     document.body.classList.remove('no-scroll'); 
 }
+    /* --- 6. 懸浮按鈕邏輯 (含邊界鎖定) --- */
+const dragBtn = document.getElementById("floatingBtn");
+let isDragging = false, startX, startY, moveX = 0, moveY = 0, startTime;
+
+dragBtn.addEventListener("touchstart", (e) => {
+    isDragging = false;
+    startTime = Date.now();
+    // 取得觸控點相對於當前按鈕位置的起始點
+    startX = e.touches[0].clientX - moveX;
+    startY = e.touches[0].clientY - moveY;
+}, {passive: false});
+
+dragBtn.addEventListener("touchmove", (e) => {
+    isDragging = true;
+    e.preventDefault();
+
+    // 1. 計算初步位移
+    let rawX = e.touches[0].clientX - startX;
+    let rawY = e.touches[0].clientY - startY;
+
+    // 2. 邊界校正邏輯 (防止超出邊框)
+    const btnRect = dragBtn.getBoundingClientRect();
+    const radius = btnRect.width / 2;
+    
+    // 計算初始 CSS 設定的 top/right 偏移值 (假設為 top:30, right:20)
+    // 這裡我們直接限制按鈕在視窗內的絕對座標
+    const minX = -(window.innerWidth - btnRect.width - 20); // 往左最大移動距離
+    const maxX = 20; // 往右回歸原位邊界 (對應 CSS right: 20)
+    const minY = -30; // 往上回歸原位邊界 (對應 CSS top: 30)
+    const maxY = window.innerHeight - btnRect.height - 30; // 往下最大移動距離
+
+    // 套用限制
+    moveX = Math.max(minX, Math.min(maxX, rawX));
+    moveY = Math.max(minY, Math.min(maxY, rawY));
+
+    dragBtn.style.transform = `translate3d(${moveX}px, ${moveY}px, 0)`;
+}, {passive: false});
+
+dragBtn.addEventListener("touchend", () => {
+    const duration = Date.now() - startTime;
+    if (!isDragging || duration < 150) {
+        document.getElementById("imageOverlay").style.display = "flex";
+        document.body.classList.add('no-scroll');
+    }
+});
 
 </script>
 
