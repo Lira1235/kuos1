@@ -222,42 +222,41 @@
 }
 /* 說明文字氣泡 - 確保在關卡框內且不被裁切 */
 .info-popup {
-    /* 1. 預設狀態 (隱藏且稍微往下掉) */
+    /* 1. 初始隱藏狀態 (完全不使用 display) */
     opacity: 0;
     visibility: hidden;
-    transform: translate(-50%, -10px); /* 水平置中，但垂直往上一點點 */
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* 使用貝茲曲線更自然 */
+    pointer-events: none; /* 隱藏時點擊穿透，不擋住地圖按鈕 */
+    
+    /* 2. 動畫起始位置 (垂直偏移 10px) */
+    transform: translate(-50%, -10px); 
+    
+    /* 3. 同步所有屬性動畫 */
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
 
-    /* 2. 定位與外觀 */
+    /* 4. 外觀定位 (水平居中) */
     position: absolute;
     top: 45px;
     left: 50%;
     width: 70%;
-    max-width: 280px;
+    max-width: 260px;
     background: #fffdf7;
     border: 2px solid #e99e9d;
     padding: 10px 15px;
-    border-radius: 12px; /* 圓角稍微大一點更現代 */
+    border-radius: 12px;
     font-size: 13px;
     color: #3a2301;
     box-shadow: 0 10px 20px rgba(0,0,0,0.1);
     z-index: 5000;
     line-height: 1.5;
-    pointer-events: none; /* 隱藏時點擊穿透，不擋住下方 */
 }
 
-/* 3. 顯示狀態 (淡入並回位) */
+/* 顯示狀態 (同步淡入並回位) */
 .info-popup.show {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto; /* 顯示時才接收點擊 */
     transform: translate(-50%, 0); /* 回到原始位置 */
-    pointer-events: auto; /* 顯示時可以被點擊 */
 }
-/* 顯示類別 */
-.info-popup.show {
-    display: block;
-}
-
 /* 確保地圖按鈕永遠在最上層 */
 #floatingBtn {
     z-index: 1000 !important;
