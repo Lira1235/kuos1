@@ -308,7 +308,7 @@ function checkAllLevelsCleared() {
     } else {
         const finishedCount = Object.values(gameProgress).filter(v => v === true).length;
         if (finishedCount === 4) {
-            btn.innerText = "工作人員兌換";
+            btn.innerText = "兌換";
             btn.disabled = false;
             btn.style.backgroundColor = "#e99e9d";
             btn.onclick = handleRedeem;
