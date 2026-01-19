@@ -428,10 +428,11 @@ function checkAnswer3() {
     }
 
     // 隨機邏輯處理
-    if (val < 1 || val > 7) {
-        // Math.random() 產生 0-1 隨機數，0.5 為界達成隨機二選一
-        const randomChoice = Math.random() < 0.5 ? "w1工作區域 1.png" : "w11工作區域 1.png";
-        imgTag.src = randomChoice;
+    iif (val >= 1 && val <= 7) {
+    // 使用 Math.random() 達成 50% 機率隨機二選一
+    const randomChoice = Math.random() < 0.5 ? "w1工作區域 1.png" : "w11工作區域 1.png";
+    imgTag.src = randomChoice;
+}
     } else if (val === 8 || val === 9) {
         // 3或4：隨機選 C 或 D 組圖
         finalSrc = isOptionA ? "w22工作區域 1.png" : "w2工作區域 1.png";
