@@ -420,6 +420,7 @@ function checkAnswer2(isCorrect) {
 function checkAnswer3() {
     const val = parseInt(document.getElementById('quizInput3').value);
     const displayArea = document.getElementById('success-content3');
+    const quizDiv = document.getElementById('quiz3-content');
     const imgTag = document.getElementById('resultImg3');
 
     if (isNaN(val) || val < 1 || val > 12) {
@@ -427,26 +428,29 @@ function checkAnswer3() {
         return;
     }
 
-    // 隨機邏輯處理
-    iif (val >= 1 && val <= 7) {
-    // 使用 Math.random() 達成 50% 機率隨機二選一
-    const randomChoice = Math.random() < 0.5 ? "w1工作區域 1.png" : "w11工作區域 1.png";
-    imgTag.src = randomChoice;
-}
+    let finalSrc = "";
+    // 產生隨機布林值，用於二選一
+    const isOptionA = Math.random() < 0.5;
+
+    if (val >= 1 && val <= 7) {
+        // 1-7：隨機二選一 (w1 或 w11)
+        finalSrc = isOptionA ? "w1工作區域 1.png" : "w11工作區域 1.png";
     } else if (val === 8 || val === 9) {
-        // 3或4：隨機選 C 或 D 組圖
-        finalSrc = isOptionA ? "w22工作區域 1.png" : "w2工作區域 1.png";
-    }else if (val === 10 || val === 11) {
-        // 5 或 6 隨機抽
-        finalSrc = isOptionA ? "w33工作區域 1.png" : "w3工作區域 1.png";
+        // 8 或 9：隨機選 w2 或 w22
+        finalSrc = isOptionA ? "w2工作區域 1.png" : "w22工作區域 1.png";
+    } else if (val === 10 || val === 11) {
+        // 10 或 11：隨機選 w3 或 w33
+        finalSrc = isOptionA ? "w3工作區域 1.png" : "w33工作區域 1.png";
     } else {
-        // 7-12 顯示對應固定圖片 (webC7.png ~ webC12.png)
+        // 12 (或其他)：固定顯示 w4
         finalSrc = "w4工作區域 1.png";
     }
 
+    // 更新圖片並切換顯示狀態
     imgTag.src = finalSrc;
-    displayArea.style.display = "block";
+    displayArea.style.display = "block"; // 顯示結果圖片
 }
+
 /* --- 第四關：相機與拍照合成邏輯 --- */
 async function startCamera() {
     const video = document.getElementById('videoStream');
