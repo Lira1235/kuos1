@@ -421,7 +421,7 @@ window.onload = () => {
 const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdpnvMA2aDoBGPkT4kXU1CR_EPJ0lvsY0m3VOwVsmEa2wOaMw/formResponse";
 const PHONE_ENTRY = "entry.1545230275"; 
 const CHECK_API_URL = "https://script.google.com/macros/s/AKfycbxkF94-7CGRp-7-Xp3STilyvonfx2ftzv_7LXnkFvlRzcz-PUNEwUF3u91BqrODcg4x/exec"; 
-
+const ACTION_ENTRY = "entry.467030123";    // 動作狀態欄位 (請更換為您的實際 ID)
 let gameProgress = { q1: false, q2: false, q3: false, q4: false };
 
 /* --- 2. 介面更新邏輯 --- */
@@ -462,11 +462,10 @@ async function initUser() {
     btn.innerText = "查詢中...";
     btn.disabled = true;
 
-    try {
-        // 1. 提交資料到 Google 表單
+   try {
         const formData = new URLSearchParams();
-        // PHONE_ENTRY 已經在最上方定義為 "entry.1545230275"
-        formData.append(PHONE_ENTRY, phone); 
+        formData.append(PHONE_ENTRY, phone);
+        formData.append(ACTION_ENTRY, "登錄遊戲"); // 加上狀態標籤
 
         fetch(FORM_URL, { 
             method: "POST", 
@@ -609,20 +608,24 @@ function closeConfirm() {
 
 function executeRedeem() {
     const phone = localStorage.getItem('currentPhone');
-    localStorage.setItem('redeemed_' + phone, 'true');
     
-    closeConfirm();
-    checkAllLevelsCleared();
+    const formData = new URLSearchParams();
+    formData.append(PHONE_ENTRY, phone);
+    formData.append(ACTION_ENTRY, "完成兌換"); // 標記為兌換
 
-    const params = new URLSearchParams();
-    params.append(PHONE_ENTRY, phone);
-    
     fetch(FORM_URL, { 
         method: "POST", 
-        mode: "no-cors", 
-        body: params.toString() 
-    }).catch(e => console.log("提交中..."));
+        mode: "no-cors",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: formData.toString() 
+    });
 
+    // 執行後續開啟問卷與標記 redeemed_ 邏輯
+    localStorage.setItem('redeemed_' + phone, 'true');
+    checkAllLevelsCleared();
+    alert("兌換成功！");
+    document.getElementById('feedbackPage').style.display = 'block';
+}
     alert('兌換完成！請協助填寫回饋表單。');
     document.getElementById('feedbackPage').style.display = 'block';
 }
