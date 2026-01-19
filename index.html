@@ -440,26 +440,7 @@ async function initUser() {
         checkAllLevelsCleared();
     }
 }
-/* 控制關卡說明彈窗 */
-function toggleInfo(stageNum) {
-    // 先關閉所有其他的說明氣泡
-    document.querySelectorAll('.info-popup').forEach(popup => {
-        if (popup.id !== `info-${stageNum}`) {
-            popup.classList.remove('show');
-        }
-    });
-    
-    // 切換當前關卡的說明氣泡
-    const target = document.getElementById(`info-${stageNum}`);
-    target.classList.toggle('show');
-}
 
-// 點擊關卡其他地方時自動關閉氣泡
-document.addEventListener('click', (e) => {
-    if (!e.target.classList.contains('info-btn') && !e.target.classList.contains('info-popup')) {
-        document.querySelectorAll('.info-popup').forEach(p => p.classList.remove('show'));
-    }
-});
 /* --- 4. 遊戲關卡邏輯 --- */
 function checkAnswer() {
     if (document.getElementById('quizInput').value === "13") {
@@ -650,7 +631,26 @@ function closeImageOverlay() {
     document.getElementById("imageOverlay").style.display = "none"; 
     document.body.style.overflow = ""; // 恢復背景滾動
 }
+/* 控制關卡說明彈窗 */
+function toggleInfo(stageNum) {
+    // 先關閉所有其他的說明氣泡
+    document.querySelectorAll('.info-popup').forEach(popup => {
+        if (popup.id !== `info-${stageNum}`) {
+            popup.classList.remove('show');
+        }
+    });
+    
+    // 切換當前關卡的說明氣泡
+    const target = document.getElementById(`info-${stageNum}`);
+    target.classList.toggle('show');
+}
 
+// 點擊關卡其他地方時自動關閉氣泡
+document.addEventListener('click', (e) => {
+    if (!e.target.classList.contains('info-btn') && !e.target.classList.contains('info-popup')) {
+        document.querySelectorAll('.info-popup').forEach(p => p.classList.remove('show'));
+    }
+});
 </script>
 
 </body>
