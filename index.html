@@ -420,8 +420,9 @@ window.onload = () => {
 /* --- 1. 配置與進度變數 --- */
 const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdpnvMA2aDoBGPkT4kXU1CR_EPJ0lvsY0m3VOwVsmEa2wOaMw/formResponse";
 const PHONE_ENTRY = "entry.1545230275"; 
+const ACTION_ENTRY = "entry.467030123";  
 const CHECK_API_URL = "https://script.google.com/macros/s/AKfycbxkF94-7CGRp-7-Xp3STilyvonfx2ftzv_7LXnkFvlRzcz-PUNEwUF3u91BqrODcg4x/exec"; 
-const ACTION_ENTRY = "entry.467030123";    // 動作狀態欄位 (請更換為您的實際 ID)
+
 let gameProgress = { q1: false, q2: false, q3: false, q4: false };
 
 /* --- 2. 介面更新邏輯 --- */
@@ -448,10 +449,12 @@ function checkAllLevelsCleared() {
             btn.innerText = `任務進度 (${finishedCount}/4)`;
             btn.disabled = true;
             btn.style.backgroundColor = "#ccc";
+            btn.onclick = null;
         }
     }
 }
 
+/* --- 3. 登錄邏輯 (記錄進站) --- */
 async function initUser() {
     const phoneInput = document.getElementById('userPhoneInput');
     const phone = phoneInput.value;
@@ -462,10 +465,10 @@ async function initUser() {
     btn.innerText = "查詢中...";
     btn.disabled = true;
 
-   try {
+    try {
         const formData = new URLSearchParams();
         formData.append(PHONE_ENTRY, phone);
-        formData.append(ACTION_ENTRY, "登錄遊戲"); // 加上狀態標籤
+        formData.append(ACTION_ENTRY, "登錄遊戲"); 
 
         fetch(FORM_URL, { 
             method: "POST", 
@@ -474,23 +477,19 @@ async function initUser() {
             body: formData.toString() 
         });
 
-        // 2. 查詢 API
         const response = await fetch(`${CHECK_API_URL}?phone=${phone}`);
         const result = await response.json();
         if (result.exists) localStorage.setItem('redeemed_' + phone, 'true');
 
     } catch (e) {
-        console.warn("API連線失敗");
+        console.warn("連線模式切換");
     } finally {
         localStorage.setItem('currentPhone', phone);
         document.getElementById('phoneModal').style.display = 'none';
-        
-        // 瞬間置頂
         window.scrollTo(0, 0); 
         checkAllLevelsCleared();
     }
 }
-
 
 /* --- 4. 遊戲關卡邏輯 --- */
 function checkAnswer() {
@@ -608,27 +607,30 @@ function closeConfirm() {
 
 function executeRedeem() {
     const phone = localStorage.getItem('currentPhone');
-    
+    if (!phone) return alert("找不到手機號碼，請重新整理頁面。");
+
+    // 1. 提交「完成兌換」紀錄到 Google 表單
     const formData = new URLSearchParams();
     formData.append(PHONE_ENTRY, phone);
-    formData.append(ACTION_ENTRY, "完成兌換"); // 標記為兌換
+    formData.append(ACTION_ENTRY, "完成兌換");
 
     fetch(FORM_URL, { 
         method: "POST", 
         mode: "no-cors",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: formData.toString() 
-    });
+    }).catch(e => console.error("提交失敗", e));
 
-    // 執行後續開啟問卷與標記 redeemed_ 邏輯
+    // 2. 標記為已兌換並更新 UI
     localStorage.setItem('redeemed_' + phone, 'true');
-    checkAllLevelsCleared();
-    alert("兌換成功！");
+    checkAllLevelsCleared(); // 此處會根據進度更新按鈕文字
+    
+    // 3. 關閉確認視窗並開啟回饋頁面
+    closeConfirm();
+    alert('兌換成功！感謝您的參與。');
     document.getElementById('feedbackPage').style.display = 'block';
 }
-    alert('兌換完成！請協助填寫回饋表單。');
-    document.getElementById('feedbackPage').style.display = 'block';
-}
+
 
 /* --- 懸浮按鈕：邊界鎖定與點擊觸發 --- */
 const dragBtn = document.getElementById("floatingBtn");
