@@ -221,19 +221,23 @@
     border: 1px solid rgba(255,255,255,0.5);
 }
 /* 說明文字氣泡 - 確保在關卡框內且不被裁切 */
+/* 說明文字氣泡 - 極致順滑版 */
 .info-popup {
-    /* 1. 初始隱藏狀態 (完全不使用 display) */
+    /* 1. 使用 opacity 搭配 pointer-events 控制顯示，捨棄 visibility 避免渲染兩階段 */
     opacity: 0;
-    visibility: hidden;
-    pointer-events: none; /* 隱藏時點擊穿透，不擋住地圖按鈕 */
+    pointer-events: none; 
     
-    /* 2. 動畫起始位置 (垂直偏移 10px) */
-    transform: translate(-50%, -10px); 
+    /* 2. 預熱 GPU 加速 */
+    will-change: transform, opacity;
     
-    /* 3. 同步所有屬性動畫 */
-    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
+    /* 3. 初始位置：微縮小並微上移，產生縮放彈出感 */
+    transform: translate(-50%, -5px) scale(0.95); 
+    
+    /* 4. 動畫曲線：使用更輕快的貝茲曲線 */
+    transition: opacity 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), 
+                transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
 
-    /* 4. 外觀定位 (水平居中) */
+    /* 5. 基本定位 */
     position: absolute;
     top: 45px;
     left: 50%;
@@ -245,18 +249,18 @@
     border-radius: 12px;
     font-size: 13px;
     color: #3a2301;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
     z-index: 5000;
     line-height: 1.5;
 }
 
-/* 顯示狀態 (同步淡入並回位) */
+/* 顯示狀態：回歸原位、原尺寸 */
 .info-popup.show {
     opacity: 1;
-    visibility: visible;
-    pointer-events: auto; /* 顯示時才接收點擊 */
-    transform: translate(-50%, 0); /* 回到原始位置 */
+    pointer-events: auto;
+    transform: translate(-50%, 0) scale(1);
 }
+
 /* 確保地圖按鈕永遠在最上層 */
 #floatingBtn {
     z-index: 1000 !important;
