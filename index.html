@@ -285,15 +285,15 @@
 </div>
   
 <script>
-/* --- 全域配置與進度 --- */
+/* --- 1. 配置與進度變數 --- */
 const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdpnvMA2aDoBGPkT4kXU1CR_EPJ0lvsY0m3VOwVsmEa2wOaMw/formResponse";
 const PHONE_ENTRY = "entry.1545230275"; 
 const CHECK_API_URL = "https://script.google.com/macros/s/AKfycbxkF94-7CGRp-7-Xp3STilyvonfx2ftzv_7LXnkFvlRzcz-PUNEwUF3u91BqrODcg4x/exec"; 
 
 let gameProgress = { q1: false, q2: false, q3: false, q4: false };
 
-/* --- 2. 介面更新與狀態檢查 --- */
-function refreshSystemStatus() {
+/* --- 2. 介面更新邏輯 --- */
+function checkAllLevelsCleared() {
     const btn = document.getElementById('redeemBtn');
     const phone = localStorage.getItem('currentPhone');
     if (!phone) return;
@@ -303,11 +303,11 @@ function refreshSystemStatus() {
     if (isRedeemed) {
         btn.innerText = "填寫問卷回饋";
         btn.disabled = false;
-        btn.style.backgroundColor = "#3a2301";
+        btn.style.backgroundColor = "#3a2301"; 
         btn.onclick = () => document.getElementById('feedbackPage').style.display = 'block';
     } else {
-        const finishedCount = Object.values(gameProgress).filter(v => v).length;
-        if (finishedCount >= 4) {
+        const finishedCount = Object.values(gameProgress).filter(v => v === true).length;
+        if (finishedCount === 4) {
             btn.innerText = "工作人員兌換";
             btn.disabled = false;
             btn.style.backgroundColor = "#e99e9d";
@@ -320,33 +320,31 @@ function refreshSystemStatus() {
     }
 }
 
-/* --- 3. 初始化使用者 --- */
+/* --- 3. 初始化與後台連動 --- */
 async function initUser() {
     const phoneInput = document.getElementById('userPhoneInput');
     const phone = phoneInput.value;
-    const btn = document.querySelector("#phoneModal .btn-check");
-    
     if (!/^09\d{8}$/.test(phone)) return alert("請輸入正確的手機號格式");
 
+    const btn = document.querySelector("#phoneModal .btn-check");
     btn.innerText = "查詢中...";
     btn.disabled = true;
 
     try {
-        const response = await fetch(`${CHECK_API_URL}?phone=${phone}`);
-        const result = await response.json();
+        const res = await fetch(`${CHECK_API_URL}?phone=${phone}`);
+        const result = await res.json();
         if (result.exists) localStorage.setItem('redeemed_' + phone, 'true');
-    } catch (e) {
-        console.warn("後台查詢失效，切換至本地模式");
+    } catch (e) { 
+        console.warn("API連線失敗，切換至本地模式"); 
     } finally {
         localStorage.setItem('currentPhone', phone);
         document.getElementById('phoneModal').style.display = 'none';
-        refreshSystemStatus();
+        checkAllLevelsCleared();
     }
 }
 
-/* --- 遊戲關卡邏輯 --- */
-// 第一關
-function checkAnswer() { // 第一關
+/* --- 4. 遊戲關卡邏輯 --- */
+function checkAnswer() {
     if (document.getElementById('quizInput').value === "13") {
         document.getElementById('success-content').style.display = "block";
         gameProgress.q1 = true;
@@ -355,33 +353,33 @@ function checkAnswer() { // 第一關
         document.getElementById('resultMsg').innerText = "❌ 再數一次喔！";
     }
 }
-function checkAnswer2(isCorrect) { // 第二關
+
+function checkAnswer2(isCorrect) {
     if (isCorrect) {
         document.getElementById('success-content2').style.display = "block";
         gameProgress.q2 = true;
         checkAllLevelsCleared();
     } else {
         document.getElementById('resultMsg2').innerText = "❌ 再猜猜看！";
-        document.getElementById('resultMsg2').style.color = "#8b0000";
     }
 }
 
-function checkAnswer3() { // 第三關
+function checkAnswer3() {
     const val = parseInt(document.getElementById('quizInput3').value);
-    if (isNaN(val) || val < 1 || val > 12) return alert("請輸入 1-12 數字");
+    if (isNaN(val) || val < 1 || val > 12) return alert("請輸入 1-12");
     
     const imgTag = document.getElementById('resultImg3');
     const isOptionA = Math.random() < 0.5;
     if (val <= 7) imgTag.src = isOptionA ? "w1工作區域 1.png" : "w11工作區域 1.png";
     else if (val <= 9) imgTag.src = isOptionA ? "w2工作區域 1.png" : "w22工作區域 1.png";
     else if (val <= 11) imgTag.src = isOptionA ? "w3工作區域 1.png" : "w33工作區域 1.png";
-    else imgTag.src = "w4工作區域 1.png";
+    else imgTag.src = "w4工作區域 1.png";   
 
     document.getElementById('success-content3').style.display = "block";
     gameProgress.q3 = true;
     checkAllLevelsCleared();
 }
-/* --- 第四關：相機與拍照 --- */
+
 async function startCamera() {
     const video = document.getElementById('videoStream');
     const overlay = document.getElementById('camera-overlay');
@@ -391,9 +389,7 @@ async function startCamera() {
         video.style.display = "block";
         overlay.style.display = "block";
         video.onclick = () => takePicture(stream);
-    } catch (err) {
-        alert("無法開啟鏡頭，請確認權限或使用 HTTPS。");
-    }
+    } catch (err) { alert("無法開啟鏡頭，請確認權限或 HTTPS。"); }
 }
 
 function takePicture(stream) {
@@ -412,143 +408,73 @@ function takePicture(stream) {
     photo.style.display = "block";
     video.style.display = "none";
     overlay.style.display = "none";
-    stream.getTracks().forEach(track => track.stop());
+    stream.getTracks().forEach(track => track.stop()); 
     
     gameProgress.q4 = true;
     checkAllLevelsCleared();
 }
 
-/* --- 兌換邏輯 --- */
-function handleRedeem() { document.getElementById('confirmModal').style.display = 'flex'; }
-function closeConfirm() { document.getElementById('confirmModal').style.display = 'none'; }
+/* --- 5. 兌換流程 --- */
+function handleRedeem() { 
+    document.getElementById('confirmModal').style.display = 'flex'; 
+}
+
+function closeConfirm() { 
+    document.getElementById('confirmModal').style.display = 'none'; 
+}
 
 function executeRedeem() {
     const phone = localStorage.getItem('currentPhone');
     localStorage.setItem('redeemed_' + phone, 'true');
-    closeConfirm();
-    refreshSystemStatus();
     
+    closeConfirm();
+    checkAllLevelsCleared();
+
     const params = new URLSearchParams();
     params.append(PHONE_ENTRY, phone);
-    fetch(FORM_URL, { method: "POST", mode: "no-cors", body: params });
+    
+    fetch(FORM_URL, { 
+        method: "POST", 
+        mode: "no-cors", 
+        body: params.toString() 
+    }).catch(e => console.log("提交中..."));
 
-    alert('兌換完成！');
-    document.getElementById('feedbackPage').style.display = 'block';
-}
-    // 背景提交 [Google Forms](https://www.google.com)
-    const params = new URLSearchParams();
-    params.append(PHONE_ENTRY, phone);
-    fetch(FORM_URL, { method: "POST", mode: "no-cors", body: params });
-
-    alert('兌換完成！請填寫意見表單。');
+    alert('兌換完成！請協助填寫回饋表單。');
     document.getElementById('feedbackPage').style.display = 'block';
 }
 
-function closeConfirm() { document.getElementById('confirmModal').style.display = 'none'; }
-
-window.onload = () => {
-    document.getElementById('phoneModal').style.display = 'flex';
-};
-    // 背景提交數據
-    const params = new URLSearchParams();
-    params.append("entry.1545230275", phone);
-    fetch("https://docs.google.com/forms/d/e/1FAIpQLSdpnvMA2aDoBGPkT4kXU1CR_EPJ0lvsY0m3VOwVsmEa2wOaMw/formResponse", { 
-        method: "POST", mode: "no-cors", body: params 
-    });
-}
-
-function closeConfirm() { document.getElementById('confirmModal').style.display = 'none'; }
-
-/* --- 可拖動懸浮按鈕邏輯 --- */
+/* --- 6. 懸浮按鈕邏輯 --- */
 const dragBtn = document.getElementById("floatingBtn");
-const imgOverlay = document.getElementById("imageOverlay");
-let isDragging = false;
-let startX, startY, moveX = 0, moveY = 0;
-let startTime;
+let isDragging = false, startX, startY, moveX = 0, moveY = 0, startTime;
 
 dragBtn.addEventListener("touchstart", (e) => {
     isDragging = false;
     startTime = Date.now();
-    // 扣除已移動的距離，確保連續拖動不跳位
     startX = e.touches[0].clientX - moveX;
     startY = e.touches[0].clientY - moveY;
 }, {passive: false});
 
 dragBtn.addEventListener("touchmove", (e) => {
     isDragging = true;
-    e.preventDefault();
     moveX = e.touches[0].clientX - startX;
     moveY = e.touches[0].clientY - startY;
     dragBtn.style.transform = `translate3d(${moveX}px, ${moveY}px, 0)`;
 }, {passive: false});
 
-dragBtn.addEventListener("touchend", (e) => {
-    const duration = Date.now() - startTime;
-    // 判斷：如果沒移動過或點擊時間極短，則執行「打開說明圖片」
-    if (!isDragging || duration < 150) {
-        imgOverlay.style.display = "flex";
+dragBtn.addEventListener("touchend", () => {
+    if (!isDragging || (Date.now() - startTime < 150)) {
+        document.getElementById("imageOverlay").style.display = "flex";
     }
 });
 
-function closeImageOverlay() {
-    imgOverlay.style.display = "none";
+function closeImageOverlay() { 
+    document.getElementById("imageOverlay").style.display = "none"; 
 }
 
-    /* --- 配置回饋表單後台 --- */
-const FEEDBACK_FORM_URL = "https://docs.google.com";
-const FEEDBACK_ENTRY = "entry.999999999"; // 回饋內容的 ID
+window.onload = () => { 
+    document.getElementById('phoneModal').style.display = 'flex'; 
+};
 
-// 1. 修改按鈕狀態刷新邏輯
-function checkAndRefreshStatus(phone) {
-    const btn = document.getElementById('redeemBtn');
-    const isRedeemed = localStorage.getItem('redeemed_' + phone) === 'true';
-    
-    if (isRedeemed) {
-        btn.innerText = "填寫回饋表單";
-        btn.disabled = false;
-        btn.style.backgroundColor = "#3a2301"; 
-        btn.onclick = () => document.getElementById('feedbackPage').style.display = 'block';
-    } else {
-        // 確保同時檢查 4 關進度
-        const finishedCount = Object.values(gameProgress).filter(v => v).length;
-        if (finishedCount >= 4) {
-            btn.innerText = "兌換獎勵";
-            btn.disabled = false;
-            btn.style.backgroundColor = "#e99e9d";
-            btn.onclick = handleRedeem;
-        } else {
-            btn.innerText = `完成任務 (${finishedCount}/4)`;
-            btn.disabled = true;
-            btn.style.backgroundColor = "#ccc";
-        }
-    }
-}
-
-// 2. 處理回饋表單提交至 Google [formResponse](https://support.google.com)
-async function submitFeedback() {
-    const content = document.getElementById('feedbackContent').value;
-    const phone = localStorage.getItem('currentPhone');
-
-    if (!content) return alert("請輸入回饋內容");
-
-    const params = new URLSearchParams();
-    params.append(FEEDBACK_ENTRY, content);
-    params.append(PHONE_ENTRY, phone); // 同時記錄是誰回饋的
-
-    try {
-        fetch(FEEDBACK_FORM_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: params.toString()
-        });
-        
-        alert("感謝您的回饋！");
-        document.getElementById('feedbackPage').style.display = 'none';
-    } catch (e) {
-        alert("傳送失敗，請檢查網路連接");
-    }
-}
 </script>
 
 </body>
