@@ -220,56 +220,38 @@
     z-index: 10;
     border: 1px solid rgba(255,255,255,0.5);
 }
-/* 說明文字氣泡 - 確保在關卡框內且不被裁切 */
-/* 說明文字氣泡 - 極致順滑版 */
+/* 說明文字氣泡 - 仿照地圖漸出效果 */
 .info-popup {
-    /* 1. 使用 opacity 搭配 pointer-events 控制顯示，捨棄 visibility 避免渲染兩階段 */
-    opacity: 0;
-    pointer-events: none; 
-    
-    /* 2. 預熱 GPU 加速 */
-    will-change: transform, opacity;
-    
-    /* 3. 初始位置：微縮小並微上移，產生縮放彈出感 */
-    transform: translate(-50%, -5px) scale(0.95); 
-    
-    /* 4. 動畫曲線：使用更輕快的貝茲曲線 */
-    transition: opacity 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), 
-                transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
-
-    /* 5. 基本定位 */
     position: absolute;
     top: 45px;
     left: 50%;
-    width: 70%;
+    width: 90%;
     max-width: 260px;
     background: #fffdf7;
     border: 2px solid #e99e9d;
-    padding: 10px 15px;
+    padding: 12px;
     border-radius: 12px;
     font-size: 13px;
     color: #3a2301;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
     z-index: 5000;
     line-height: 1.5;
+
+    /* 關鍵：初始狀態設在上方 10px 並隱藏 */
+    opacity: 0;
+    pointer-events: none;
+    transform: translate3d(-50%, -10px, 0); 
+    
+    /* 設定與地圖相似的過渡速度 */
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    will-change: transform, opacity;
 }
 
-/* 顯示狀態：回歸原位、原尺寸 */
+/* 顯示狀態：垂直位移歸零 */
 .info-popup.show {
     opacity: 1;
     pointer-events: auto;
-    transform: translate(-50%, 0) scale(1);
-}
-
-/* 確保地圖按鈕永遠在最上層 */
-#floatingBtn {
-    z-index: 1000 !important;
-}
-
-/* 顯示時的類別 */
-.info-popup.show {
-    display: block;    /* 當有 .show 時才出現 */
-    animation: fadeIn 0.2s ease;
+    transform: translate3d(-50%, 0, 0); 
 }
 
 @keyframes fadeIn {
