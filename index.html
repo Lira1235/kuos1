@@ -403,18 +403,18 @@ const PHONE_ENTRY = "entry.1545230275";
 const ACTION_ENTRY = "entry.467030123";  
 const CHECK_API_URL = "https://script.google.com/macros/s/AKfycbxkF94-7CGRp-7-Xp3STilyvonfx2ftzv_7LXnkFvlRzcz-PUNEwUF3u91BqrODcg4x/exec"; 
 
-// 遊戲進度狀態
-let gameProgress = { q1: false, q2: false, q3: false, q4: false };
+let gameProgress = JSON.parse(localStorage.getItem('temp_progress')) || { q1: false, q2: false, q3: false, q4: false };
+
 /* --- 2. 初始化流程 --- */
 window.onload = () => {
     window.scrollTo(0, 0);
-    document.getElementById('phoneModal').style.display = 'flex'; 
+    const phoneModal = document.getElementById('phoneModal');
+    if (phoneModal) phoneModal.style.display = 'flex'; 
     
     const lastPhone = localStorage.getItem('currentPhone');
     if (lastPhone) {
         document.getElementById('userPhoneInput').value = lastPhone;
     }
-    // 初始狀態下按鈕應為禁用
     checkAllLevelsCleared();
 };
 
@@ -431,28 +431,24 @@ function checkAllLevelsCleared() {
         return;
     }
 
-    // 檢查是否已完成兌換 (來自 API 查詢或本地紀錄)
+    // 優先檢查後台/本地的兌換狀態
     const isRedeemed = localStorage.getItem('redeemed_' + phone) === 'true';
 
     if (isRedeemed) {
-        // 狀態：已兌換完畢 -> 顯示填寫回饋
         btn.innerText = "填寫問卷回饋";
         btn.disabled = false;
         btn.style.backgroundColor = "#3a2301"; 
         btn.style.color = "white";
         btn.onclick = () => document.getElementById('feedbackPage').style.display = 'block';
     } else {
-        // 狀態：未兌換 -> 檢查關卡進度
         const finishedCount = Object.values(gameProgress).filter(v => v === true).length;
         
         if (finishedCount === 4) {
-            // 已過 4 關 -> 變更為兌換按鈕
             btn.innerText = "領取兌換券";
             btn.disabled = false;
             btn.style.backgroundColor = "#e99e9d";
             btn.onclick = handleRedeem; 
         } else {
-            // 未滿 4 關 -> 顯示任務進度
             btn.innerText = `需完成任務 (${finishedCount}/4)`;
             btn.disabled = true;
             btn.style.backgroundColor = "#ccc";
@@ -461,7 +457,7 @@ function checkAllLevelsCleared() {
     }
 }
 
-/* --- 4. 登錄邏輯：修正輸入號碼檢查 --- */
+/* --- 4. 登錄邏輯：修正自動偵測已兌換號碼 --- */
 async function initUser() {
     const phoneInput = document.getElementById('userPhoneInput');
     const phone = phoneInput.value.trim();
@@ -472,75 +468,64 @@ async function initUser() {
     btn.innerText = "查詢中...";
     btn.disabled = true;
 
-    // 每次登錄新號碼，重置前端關卡進度
-    gameProgress = { q1: false, q2: false, q3: false, q4: false };
-
     try {
-        // 紀錄登錄行為
+        // 紀錄登錄
         hiddenSubmit(phone, "遊戲登錄");
 
-        // 向 GAS API 查詢此號碼是否曾兌換過
+        // 自動向 GAS API 檢查此號碼是否曾在後台完成兌換
         const response = await fetch(`${CHECK_API_URL}?phone=${phone}`);
         const result = await response.json();
         
         if (result.exists) {
-            // 若後台紀錄已兌換，標記本地狀態
             localStorage.setItem('redeemed_' + phone, 'true');
-            alert("此號碼已兌換過，按鈕將顯示為填寫問卷回饋。");
+            // 若已兌換，重設進度為全滿以防萬一
+            gameProgress = { q1: true, q2: true, q3: true, q4: true };
         } else {
-            // 若為新號碼，確保清除舊的已兌換標記
+            // 若為新號碼，清除本地舊的標記
             localStorage.removeItem('redeemed_' + phone);
+            // 只有新號碼登錄時才徹底重置關卡進度
+            gameProgress = { q1: false, q2: false, q3: false, q4: false };
+            localStorage.removeItem('temp_progress');
         }
     } catch (e) {
-        console.warn("API 查詢異常，進入遊戲模式");
+        console.warn("API 查詢異常，維持現有模式");
     } finally {
         localStorage.setItem('currentPhone', phone);
         document.getElementById('phoneModal').style.display = 'none';
         window.scrollTo(0, 0); 
-        checkAllLevelsCleared(); // 刷新按鈕：若已兌換會變棕色，未兌換變灰色(0/4)
+        checkAllLevelsCleared();
     }
 }
 
-/* --- 5. 兌換提交：修正後台紀錄為「兌換完成」 --- */
+/* --- 5. 兌換提交：後台成功紀錄後立即鎖定按鈕 --- */
 function executeRedeem() {
     const phone = localStorage.getItem('currentPhone');
-    if (!phone) return alert("資訊遺失，請重新輸入手機號碼。");
+    if (!phone) return alert("資訊遺失，請重新登入");
 
     const btn = document.getElementById('redeemBtn');
-    
-    // 1. 先將按鈕設為處理中，避免重複點擊
     if (btn) {
-        btn.innerText = "處理中...";
+        btn.innerText = "紀錄提交中...";
         btn.disabled = true;
     }
 
-    // 2. 提交「兌換完成」紀錄至 Google 表單 (後台紀錄)
-    // 這裡使用 hiddenSubmit 進行幕後提交
+    // 幕後提交「兌換完成」
     hiddenSubmit(phone, "兌換完成");
 
-    // 3. 設定延遲 (1.2秒)，模擬等待後台接收時間，確保提交動作已發出
+    // 延遲同步 UI，確保資料發出
     setTimeout(() => {
-        // A. 寫入本地已兌換標記 (這是 checkAllLevelsCleared 判斷的依據)
+        // 1. 本地鎖定
         localStorage.setItem('redeemed_' + phone, 'true');
-
-        // B. 關閉確認視窗
-        closeConfirm();
-
-        // C. 強制重新整理按鈕狀態 (此時按鈕會根據上面的標記變為「填寫問卷回饋」)
+        // 2. 清除暫存進度
+        localStorage.removeItem('temp_progress');
+        // 3. 更新介面
         checkAllLevelsCleared(); 
-
-        // D. 彈出成功提示
-        alert('兌換完成！後台已紀錄。');
-
-        // E. 顯示回饋頁面層
-        const feedbackPage = document.getElementById('feedbackPage');
-        if (feedbackPage) {
-            feedbackPage.style.display = 'block';
-        }
+        closeConfirm();
+        alert('兌換成功！');
+        document.getElementById('feedbackPage').style.display = 'block';
     }, 1200); 
 }
 
-/* --- 6. 穩定提交工具 (確保資料 100% 傳輸) --- */
+/* --- 6. 輔助函式：穩定提交與進度儲存 --- */
 function hiddenSubmit(phone, action) {
     const iframeName = "hidden_iframe_" + Date.now();
     const iframe = document.createElement("iframe");
@@ -552,7 +537,6 @@ function hiddenSubmit(phone, action) {
     form.target = iframeName;
     form.action = FORM_URL;
     form.method = "POST";
-    // 關鍵：Google Form 接收的標準編碼
     form.enctype = "application/x-www-form-urlencoded";
 
     const addField = (name, value) => {
@@ -567,14 +551,7 @@ function hiddenSubmit(phone, action) {
     addField(ACTION_ENTRY, action);
 
     document.body.appendChild(form);
-    
-    // 稍微延遲讓 iframe 準備好
-    setTimeout(() => {
-        form.submit();
-        console.log(`數據已發送: ${phone} - ${action}`);
-    }, 100);
-
-    // 2.5秒後徹底清理
+    setTimeout(() => { form.submit(); }, 100);
     setTimeout(() => {
         if (document.body.contains(form)) document.body.removeChild(form);
         if (document.body.contains(iframe)) document.body.removeChild(iframe);
