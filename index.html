@@ -490,20 +490,24 @@ function closeConfirm() {
     document.getElementById('confirmModal').style.display = 'none'; 
 }
 
+/* --- 修改後的執行兌換函式 --- */
 function executeRedeem() {
     const phone = localStorage.getItem('currentPhone');
     if (!phone) return;
 
-    hiddenSubmit(phone, "完成兌換"); // 紀錄兌換
+    // 1. 執行隱藏提交
+    hiddenSubmit(phone, "完成兌換");
 
+    // 2. 標記本地狀態
     localStorage.setItem('redeemed_' + phone, 'true');
     
+    // 3. 延長延遲時間至 1.5 秒，確保資料送出後才切換頁面
     setTimeout(() => {
         checkAllLevelsCleared(); 
         closeConfirm();
         alert('兌換成功！');
         document.getElementById('feedbackPage').style.display = 'block';
-    }, 500);
+    }, 1500); 
 }
 
 /* --- 6. 穩定提交函式：解決後台沒資料問題 --- */
