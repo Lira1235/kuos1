@@ -407,30 +407,25 @@ const CHECK_API_URL = "https://script.google.com/macros/s/AKfycbxkF94-7CGRp-7-Xp
 let gameProgress = { q1: false, q2: false, q3: false, q4: false };
 /* --- 2. 初始化流程 --- */
 window.onload = () => {
-    // 1. 強制滾動到最上方並彈出手機號輸入框
     window.scrollTo(0, 0);
-    document.getElementById('phoneModal').style.display = 'flex'; 
+    const modal = document.getElementById('phoneModal');
+    if(modal) modal.style.display = 'flex';
     
-    // 2. 自動回填上次輸入的手機號
     const lastPhone = localStorage.getItem('currentPhone');
     if (lastPhone) {
         document.getElementById('userPhoneInput').value = lastPhone;
     }
-    
-    // 3. 初始化按鈕顯示狀態
     checkAllLevelsCleared();
 };
 
-/* --- 3. 核心檢查邏輯：完成 4 關才能點擊兌換 --- */
+/* --- 3. 核心邏輯：檢查 4 關進度與按鈕狀態 --- */
 function checkAllLevelsCleared() {
     const btn = document.getElementById('redeemBtn');
     if (!btn) return;
 
     const phone = localStorage.getItem('currentPhone');
-    
-    // 尚未登入時的按鈕狀態
     if (!phone) {
-        btn.innerText = "請先登錄手機號";
+        btn.innerText = "請先輸入手機號";
         btn.disabled = true;
         btn.style.backgroundColor = "#ccc";
         return;
@@ -439,68 +434,56 @@ function checkAllLevelsCleared() {
     const isRedeemed = localStorage.getItem('redeemed_' + phone) === 'true';
 
     if (isRedeemed) {
-        // 已兌換：變更為問卷模式
         btn.innerText = "填寫問卷回饋";
         btn.disabled = false;
         btn.style.backgroundColor = "#3a2301"; 
-        btn.style.color = "white";
         btn.onclick = () => document.getElementById('feedbackPage').style.display = 'block';
     } else {
-        // 計算完成關卡數
         const finishedCount = Object.values(gameProgress).filter(v => v === true).length;
-        
         if (finishedCount === 4) {
-            // 四關全開：解鎖兌換按鈕
             btn.innerText = "領取兌換券";
             btn.disabled = false;
             btn.style.backgroundColor = "#e99e9d";
-            btn.style.color = "white";
-            btn.onclick = handleRedeem; 
+            btn.onclick = handleRedeem; // 指向彈窗函式
         } else {
-            // 關卡未完成：按鈕禁用且顯示進度
-            btn.innerText = `需完成任務 (${finishedCount}/4)`;
+            btn.innerText = `任務進度 (${finishedCount}/4)`;
             btn.disabled = true;
             btn.style.backgroundColor = "#ccc";
-            btn.style.color = "#666";
             btn.onclick = null;
         }
     }
 }
 
-/* --- 4. 登錄與 API 查詢邏輯 --- */
+/* --- 4. 登錄與 API 查詢 --- */
 async function initUser() {
     const phoneInput = document.getElementById('userPhoneInput');
     const phone = phoneInput.value.trim();
     const btn = document.querySelector("#phoneModal .btn-check");
     
-    if (!/^09\d{8}$/.test(phone)) return alert("請輸入正確的手機號格式 (09xxxxxxxx)");
+    if (!/^09\d{8}$/.test(phone)) return alert("請輸入正確的手機號格式");
 
     btn.innerText = "查詢中...";
     btn.disabled = true;
 
     try {
-        // 紀錄登錄行為到 Google 表單
-        hiddenSubmit(phone, "登錄遊戲");
+        hiddenSubmit(phone, "登錄遊戲"); // 紀錄進站
 
-        // 查詢後台 GAS 該手機號是否已兌換過
         const response = await fetch(`${CHECK_API_URL}?phone=${phone}`);
         const result = await response.json();
-        if (result.exists) {
-            localStorage.setItem('redeemed_' + phone, 'true');
-        }
+        if (result.exists) localStorage.setItem('redeemed_' + phone, 'true');
     } catch (e) {
-        console.warn("API 查詢失敗，切換至本地紀錄模式");
+        console.warn("API 離線");
     } finally {
         localStorage.setItem('currentPhone', phone);
         document.getElementById('phoneModal').style.display = 'none';
-        window.scrollTo(0, 0); 
         checkAllLevelsCleared();
     }
 }
 
-/* --- 5. 兌換確認與提交 --- */
+/* --- 5. 兌換流程與彈窗 --- */
 function handleRedeem() { 
-    document.getElementById('confirmModal').style.display = 'flex'; 
+    const modal = document.getElementById('confirmModal');
+    if(modal) modal.style.display = 'flex'; 
 }
 
 function closeConfirm() { 
@@ -509,22 +492,21 @@ function closeConfirm() {
 
 function executeRedeem() {
     const phone = localStorage.getItem('currentPhone');
-    if (!phone) return alert("資訊遺失，請重新登入");
+    if (!phone) return;
 
-    // 提交「完成兌換」到 Google 表單 (確保後台收到手機號)
-    hiddenSubmit(phone, "完成兌換");
+    hiddenSubmit(phone, "完成兌換"); // 紀錄兌換
 
-    // 更新本地狀態防止重複兌換
     localStorage.setItem('redeemed_' + phone, 'true');
     
     setTimeout(() => {
         checkAllLevelsCleared(); 
         closeConfirm();
-        alert('兌換成功！請向現場工作人員出示此畫面。');
+        alert('兌換成功！');
         document.getElementById('feedbackPage').style.display = 'block';
-    }, 800);
+    }, 500);
 }
 
+/* --- 6. 穩定提交函式：解決後台沒資料問題 --- */
 function hiddenSubmit(phone, action) {
     const iframeName = "hidden_iframe_" + Date.now();
     const iframe = document.createElement("iframe");
@@ -534,10 +516,8 @@ function hiddenSubmit(phone, action) {
 
     const form = document.createElement("form");
     form.target = iframeName;
-    form.action = FORM_URL; 
+    form.action = FORM_URL;
     form.method = "POST";
-    // 強制設定編碼格式，確保 Google 表單能解析
-    form.enctype = "application/x-www-form-urlencoded";
 
     const addField = (name, value) => {
         const input = document.createElement("input");
@@ -551,22 +531,14 @@ function hiddenSubmit(phone, action) {
     addField(ACTION_ENTRY, action);
 
     document.body.appendChild(form);
-    
-    // 確保表單真的送出
-    try {
-        form.submit();
-        console.log("資料已送出:", phone, action);
-    } catch (e) {
-        console.error("提交異常:", e);
-    }
+    form.submit();
 
-    // 延長清理時間，確保數據發送完畢
+    // 延遲刪除確保資料已發出
     setTimeout(() => {
-        if (document.body.contains(form)) document.body.removeChild(form);
-        if (document.body.contains(iframe)) document.body.removeChild(iframe);
+        document.body.removeChild(form);
+        document.body.removeChild(iframe);
     }, 2000);
 }
-
 function checkAnswer() {
     if (document.getElementById('quizInput').value === "13") {
         document.getElementById('success-content').style.display = "block";
