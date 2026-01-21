@@ -401,7 +401,7 @@
 const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdpnvMA2aDoBGPkT4kXU1CR_EPJ0lvsY0m3VOwVsmEa2wOaMw/formResponse";
 const PHONE_ENTRY = "entry.1545230275"; 
 const ACTION_ENTRY = "entry.467030123";  
-const CHECK_API_URL = "https://script.google.com/macros/s/AKfycbxkF94-7CGRp-7-Xp3STilyvonfx2ftzv_7LXnkFvlRzcz-PUNEwUF3u91BqrODcg4x/exec"; 
+const CHECK_API_URL = "https://script.google.com/macros/s/AKfycbz8vLIsVCUhBuqsd8ZLnOA4gd5TaF2jvOkKC-5FLaTOGHZeDfp_XjaGvMbnwMbMSIep/exec"; 
 
 let gameProgress = JSON.parse(localStorage.getItem('temp_progress')) || { q1: false, q2: false, q3: false, q4: false };
 
@@ -458,6 +458,7 @@ function checkAllLevelsCleared() {
 }
 
 /* --- 4. 登錄邏輯：修正自動偵測已兌換號碼 --- */
+/* --- 前端修正：登錄即時審核兌換狀態 --- */
 async function initUser() {
     const phoneInput = document.getElementById('userPhoneInput');
     const phone = phoneInput.value.trim();
@@ -465,37 +466,45 @@ async function initUser() {
     
     if (!/^09\d{8}$/.test(phone)) return alert("請輸入正確的手機號格式");
 
-    btn.innerText = "查詢中...";
+    btn.innerText = "驗證中...";
     btn.disabled = true;
 
+    // 先重設本地快取，避免舊號碼干擾
+    localStorage.removeItem('redeemed_' + phone);
+    gameProgress = { q1: false, q2: false, q3: false, q4: false };
+
     try {
-        // 紀錄登錄
+        // A. 紀錄「遊戲登錄」行為
         hiddenSubmit(phone, "遊戲登錄");
 
-        // 自動向 GAS API 檢查此號碼是否曾在後台完成兌換
-        const response = await fetch(`${CHECK_API_URL}?phone=${phone}`);
+        // B. 呼叫 GAS API 進行精準審核 (檢查是否有過「兌換完成」紀錄)
+        const response = await fetch(`${CHECK_API_URL}?phone=${phone}&t=${Date.now()}`);
         const result = await response.json();
         
         if (result.exists) {
+            // 已兌換：鎖定狀態並提示
             localStorage.setItem('redeemed_' + phone, 'true');
-            // 若已兌換，重設進度為全滿以防萬一
-            gameProgress = { q1: true, q2: true, q3: true, q4: true };
-        } else {
-            // 若為新號碼，清除本地舊的標記
-            localStorage.removeItem('redeemed_' + phone);
-            // 只有新號碼登錄時才徹底重置關卡進度
-            gameProgress = { q1: false, q2: false, q3: false, q4: false };
-            localStorage.removeItem('temp_progress');
+            alert("此號碼已完成兌換，將為您導向問卷頁面。");
         }
     } catch (e) {
-        console.warn("API 查詢異常，維持現有模式");
+        console.warn("API 查詢異常，進入一般遊戲模式");
     } finally {
         localStorage.setItem('currentPhone', phone);
         document.getElementById('phoneModal').style.display = 'none';
+        
+        // C. 即時判斷 UI：若已兌換，刷新後按鈕會變棕色並可點擊進入回饋頁
+        checkAllLevelsCleared(); 
+        
+        // 若已兌換，自動捲動或彈出回饋頁
+        const isRedeemed = localStorage.getItem('redeemed_' + phone) === 'true';
+        if (isRedeemed) {
+             document.getElementById('feedbackPage').style.display = 'block';
+        }
+        
         window.scrollTo(0, 0); 
-        checkAllLevelsCleared();
     }
 }
+
 
 /* --- 5. 兌換提交：後台成功紀錄後立即鎖定按鈕 --- */
 function executeRedeem() {
