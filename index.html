@@ -465,30 +465,37 @@ async function initUser() {
     btn.disabled = true;
 
     try {
-        // 先紀錄一筆登錄行為 (不影響兌換狀態)
-        hiddenSubmit(phone, "遊戲登錄");
-
-        // 向 GAS API 查詢此號碼是否「兌換完成」
+        // A. 第一步：先向 GAS 查詢此號碼是否「兌換完成」
+        // 加上 t= 參數防止瀏覽器快取舊資料
         const response = await fetch(`${CHECK_API_URL}?phone=${phone}&t=${Date.now()}`);
         const result = await response.json();
         
         if (result.exists) {
+            // 已兌換：鎖定狀態，且「不執行」hiddenSubmit(phone, "遊戲登錄")
             localStorage.setItem('redeemed_' + phone, 'true');
-            gameProgress = { q1: true, q2: true, q3: true, q4: true };
-            alert("此號碼已完成兌換，將為您導向問卷頁面。");
+            gameProgress = { q1: true, q2: true, q3: true, q4: true }; // 強制全過
+            alert("偵測到此號碼已完成兌換，將為您導向問卷。");
         } else {
+            // 未兌換：這才執行寫入後台「遊戲登錄」
             localStorage.removeItem('redeemed_' + phone);
-            // 新用戶或未兌換用戶才重置本地進度
+            hiddenSubmit(phone, "遊戲登錄"); 
+            
+            // 只有新用戶才重置進度
             if (!localStorage.getItem('temp_progress')) {
                 gameProgress = { q1: false, q2: false, q3: false, q4: false };
             }
         }
     } catch (e) {
-        console.warn("API 查詢異常");
+        console.warn("API 查詢異常，進入離線遊戲模式");
+        // 離線模式下才勉強寫入一筆登錄
+        hiddenSubmit(phone, "遊戲登錄");
     } finally {
         localStorage.setItem('currentPhone', phone);
         document.getElementById('phoneModal').style.display = 'none';
+        
         checkAllLevelsCleared(); 
+        
+        // 若已兌換，自動跳轉
         if (localStorage.getItem('redeemed_' + phone) === 'true') {
              document.getElementById('feedbackPage').style.display = 'block';
         }
