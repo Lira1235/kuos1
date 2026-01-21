@@ -401,7 +401,7 @@
 const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdpnvMA2aDoBGPkT4kXU1CR_EPJ0lvsY0m3VOwVsmEa2wOaMw/formResponse";
 const PHONE_ENTRY = "entry.1545230275"; 
 const ACTION_ENTRY = "entry.467030123";  
-const CHECK_API_URL = "https://script.google.com/macros/s/AKfycbys3gzx9O40bUuaORhD7Q-iOLifX9KpyfchXYchk44SlejoOphDet9B9YVVmeCwOyGu/exec"; 
+const CHECK_API_URL = "https://script.google.com/macros/s/AKfycbzZpnQv3ceKQKtuz7Y02m_NYxil0uG9jUJRmYreqkLP-vk3IJH4wDw8q5sHjXyydiVt/exec"; 
 
 let gameProgress = JSON.parse(localStorage.getItem('temp_progress')) || { q1: false, q2: false, q3: false, q4: false };
 
@@ -513,30 +513,39 @@ function closeConfirm() {
     document.getElementById('confirmModal').style.display = 'none'; 
 }
 
-function executeRedeem() {
+async function executeRedeem() {
     const phone = localStorage.getItem('currentPhone');
-    // 如果本地標記已兌換，絕對不執行 hiddenSubmit
+    if (!phone) return alert("資訊遺失");
+
+    // 1. 攔截重複提交：若本地已兌換，直接跳轉
     if (localStorage.getItem('redeemed_' + phone) === 'true') {
-        alert("此號碼已在後台完成紀錄，不需重複提交。");
         closeConfirm();
+        document.getElementById('feedbackPage').style.display = 'block';
         return;
     }
 
     const btn = document.getElementById('redeemBtn');
-    if (btn) { btn.innerText = "紀錄提交中..."; btn.disabled = true; }
+    if (btn) { btn.innerText = "更新後台紀錄..."; btn.disabled = true; }
 
-    // 只有第一次兌換會執行 hiddenSubmit
-    hiddenSubmit(phone, "兌換完成");
+    try {
+        // 2. 呼叫 GAS API 更新狀態為「兌換完成」
+        // 這會將原本的「遊戲登錄」那一列更新，或新增一列
+        const response = await fetch(`${CHECK_API_URL}?phone=${phone}&action=update&t=${Date.now()}`);
+        const result = await response.json();
 
-    setTimeout(() => {
-        localStorage.setItem('redeemed_' + phone, 'true');
-        localStorage.removeItem('temp_progress'); 
-        checkAllLevelsCleared(); 
-        closeConfirm();
-        alert('兌換成功！');
-        document.getElementById('feedbackPage').style.display = 'block';
-    }, 1200); 
-}
+        if (result.success) {
+            localStorage.setItem('redeemed_' + phone, 'true');
+            localStorage.removeItem('temp_progress'); 
+            
+            checkAllLevelsCleared(); 
+            closeConfirm();
+            alert('兌換成功！後台紀錄已更新。');
+            document.getElementById('feedbackPage').style.display = 'block';
+        }
+    } catch (e) {
+        alert("網路異常，請稍後再試");
+        if (btn) { btn.innerText = "領取兌換券"; btn.disabled = false; }
+    }
 
 /* --- 6. 通用穩定提交函式 --- */
 function hiddenSubmit(phone, action) {
