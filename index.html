@@ -567,12 +567,29 @@ function hiddenSubmit(phone, action) {
 
     
 function checkAnswer() {
-    if (document.getElementById('quizInput').value === "13") {
+    const input = document.getElementById('quizInput');
+    const resultMsg = document.getElementById('resultMsg');
+    
+    if (input.value === "13") {
+        // 1. 強制輸入框失去焦點（收起鍵盤）
+        input.blur();
+
+        // 2. 恢復頁面縮放：微調捲動位移來重置 Viewport
+        setTimeout(() => {
+            window.scrollTo(0, window.scrollY);
+        }, 100);
+
+        // 3. 更新狀態與內容
         document.getElementById('success-content').style.display = "block";
+        resultMsg.innerText = ""; // 清除錯誤訊息
+        
+        // 4. 進度持久化
         gameProgress.q1 = true;
+        localStorage.setItem('temp_progress', JSON.stringify(gameProgress));
+        
         checkAllLevelsCleared();
     } else {
-        document.getElementById('resultMsg').innerText = "❌ 再數一次喔！";
+        resultMsg.innerText = "❌ 再數一次喔！";
     }
 }
 
@@ -586,21 +603,40 @@ function checkAnswer2(isCorrect) {
     }
 }
 
+/* --- 第三關：加入鍵盤收回與進度儲存 --- */
 function checkAnswer3() {
-    const val = parseInt(document.getElementById('quizInput3').value);
-    if (isNaN(val) || val < 1 || val > 12) return alert("請輸入 1-12");
+    const input = document.getElementById('quizInput3');
+    const val = parseInt(input.value);
     
+    if (isNaN(val) || val < 1 || val > 12) {
+        return alert("請輸入 1-12");
+    }
+    
+    // 1. 強制輸入框失去焦點（這會收起手機鍵盤）
+    input.blur();
+
+    // 2. 恢復頁面縮放：微調捲動位移重置 Viewport
+    setTimeout(() => {
+        window.scrollTo(0, window.scrollY);
+    }, 100);
+
     const imgTag = document.getElementById('resultImg3');
     const isOptionA = Math.random() < 0.5;
+    
     if (val <= 7) imgTag.src = isOptionA ? "w1工作區域 1.png" : "w11工作區域 1.png";
     else if (val <= 9) imgTag.src = isOptionA ? "w2工作區域 1.png" : "w22工作區域 1.png";
     else if (val <= 11) imgTag.src = isOptionA ? "w3工作區域 1.png" : "w33工作區域 1.png";
     else imgTag.src = "w4工作區域 1.png";   
 
     document.getElementById('success-content3').style.display = "block";
+    
+    // 3. 更新進度並同步到本地快取 (防止刷新頁面後消失)
     gameProgress.q3 = true;
+    localStorage.setItem('temp_progress', JSON.stringify(gameProgress));
+    
     checkAllLevelsCleared();
 }
+
 
 /* --- 第四關：加入拍照文字提示 --- */
 async function startCamera() {
