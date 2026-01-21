@@ -527,15 +527,110 @@ function hiddenSubmit(phone, action) {
     }, 1000);
 }
 
-/* --- 關卡輔助：確保每關結束都呼叫 checkAllLevelsCleared() --- */
-// 範例：第一關
 function checkAnswer() {
     if (document.getElementById('quizInput').value === "13") {
         document.getElementById('success-content').style.display = "block";
         gameProgress.q1 = true;
-        checkAllLevelsCleared(); // 每次過關都檢查一次按鈕
+        checkAllLevelsCleared();
+    } else {
+        document.getElementById('resultMsg').innerText = "❌ 再數一次喔！";
     }
 }
+
+function checkAnswer2(isCorrect) {
+    if (isCorrect) {
+        document.getElementById('success-content2').style.display = "block";
+        gameProgress.q2 = true;
+        checkAllLevelsCleared();
+    } else {
+        document.getElementById('resultMsg2').innerText = "❌ 再猜猜看！";
+    }
+}
+
+function checkAnswer3() {
+    const val = parseInt(document.getElementById('quizInput3').value);
+    if (isNaN(val) || val < 1 || val > 12) return alert("請輸入 1-12");
+    
+    const imgTag = document.getElementById('resultImg3');
+    const isOptionA = Math.random() < 0.5;
+    if (val <= 7) imgTag.src = isOptionA ? "w1工作區域 1.png" : "w11工作區域 1.png";
+    else if (val <= 9) imgTag.src = isOptionA ? "w2工作區域 1.png" : "w22工作區域 1.png";
+    else if (val <= 11) imgTag.src = isOptionA ? "w3工作區域 1.png" : "w33工作區域 1.png";
+    else imgTag.src = "w4工作區域 1.png";   
+
+    document.getElementById('success-content3').style.display = "block";
+    gameProgress.q3 = true;
+    checkAllLevelsCleared();
+}
+
+/* --- 第四關：加入拍照文字提示 --- */
+async function startCamera() {
+    const video = document.getElementById('videoStream');
+    const overlay = document.getElementById('camera-overlay');
+    const quizContent = document.getElementById('quiz4-content');
+    
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: "environment" } 
+        });
+        
+        video.srcObject = stream;
+        video.style.display = "block";
+        overlay.style.display = "block";
+        
+        // --- 新增：動態插入提示文字 ---
+        // 為了確保文字在相機上方，我們修改 quizContent 的樣式
+        quizContent.innerHTML = `
+            <div id="camera-tip" style="
+                position: absolute; 
+                top: 50%; left: 50%; 
+                transform: translate(-50%, -50%);
+                background: rgba(0,0,0,0.5); 
+                color: white; 
+                padding: 10px 20px; 
+                border-radius: 20px;
+                z-index: 10;
+                pointer-events: none;
+                white-space: nowrap;
+            ">📷 點擊畫面拍照</div>
+        `;
+        
+        video.onclick = () => takePicture(stream);
+    } catch (err) {
+        alert("無法開啟鏡頭，請確認權限或使用 HTTPS。");
+    }
+}
+
+function takePicture(stream) {
+    const video = document.getElementById('videoStream');
+    const canvas = document.getElementById('canvas');
+    const photo = document.getElementById('photo-preview');
+    const overlay = document.getElementById('camera-overlay');
+    const quizContent = document.getElementById('quiz4-content'); // 用於移除提示
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    
+    ctx.drawImage(video, 0, 0);
+    ctx.drawImage(overlay, 0, 0, canvas.width, canvas.height);
+
+    photo.src = canvas.toDataURL('image/png');
+    photo.style.display = "block";
+    
+    // --- 新增：移除提示文字與隱藏相機 ---
+    const tip = document.getElementById('camera-tip');
+    if (tip) tip.remove();
+    quizContent.style.display = "none"; 
+
+    video.style.display = "none";
+    overlay.style.display = "none";
+    stream.getTracks().forEach(track => track.stop()); 
+    
+    gameProgress.q4 = true;
+    checkAllLevelsCleared();
+}
+
 /* --- 懸浮按鈕：邊界鎖定與點擊觸發 --- */
 const dragBtn = document.getElementById("floatingBtn");
 const imgOverlay = document.getElementById("imageOverlay");
