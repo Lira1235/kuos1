@@ -401,20 +401,19 @@
 const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdpnvMA2aDoBGPkT4kXU1CR_EPJ0lvsY0m3VOwVsmEa2wOaMw/formResponse";
 const PHONE_ENTRY = "entry.1545230275"; 
 const ACTION_ENTRY = "entry.467030123";  
-const CHECK_API_URL = "https://script.google.com/macros/s/AKfycbz8vLIsVCUhBuqsd8ZLnOA4gd5TaF2jvOkKC-5FLaTOGHZeDfp_XjaGvMbnwMbMSIep/exec"; 
+const CHECK_API_URL = "https://script.google.com/macros/s/AKfycbys3gzx9O40bUuaORhD7Q-iOLifX9KpyfchXYchk44SlejoOphDet9B9YVVmeCwOyGu/exec"; 
 
 let gameProgress = JSON.parse(localStorage.getItem('temp_progress')) || { q1: false, q2: false, q3: false, q4: false };
 
 /* --- 2. 初始化流程 --- */
 window.onload = () => {
     window.scrollTo(0, 0);
-    const phoneModal = document.getElementById('phoneModal');
-    if (phoneModal) phoneModal.style.display = 'flex'; 
+    const modal = document.getElementById('phoneModal');
+    if (modal) modal.style.display = 'flex';
     
     const lastPhone = localStorage.getItem('currentPhone');
-    if (lastPhone) {
-        document.getElementById('userPhoneInput').value = lastPhone;
-    }
+    if (lastPhone) document.getElementById('userPhoneInput').value = lastPhone;
+    
     checkAllLevelsCleared();
 };
 
@@ -434,33 +433,27 @@ function checkAllLevelsCleared() {
     const isRedeemed = localStorage.getItem('redeemed_' + phone) === 'true';
 
     if (isRedeemed) {
-        // 狀態：已兌換 -> 棕色按鈕 -> 導向回饋
         btn.innerText = "填寫問卷回饋";
         btn.disabled = false;
         btn.style.backgroundColor = "#3a2301"; 
-        btn.style.color = "white";
         btn.onclick = () => document.getElementById('feedbackPage').style.display = 'block';
     } else {
         const finishedCount = Object.values(gameProgress).filter(v => v === true).length;
         if (finishedCount === 4) {
-            // 狀態：完成關卡 -> 粉色按鈕 -> 觸發彈窗
             btn.innerText = "領取兌換券";
             btn.disabled = false;
             btn.style.backgroundColor = "#e99e9d";
-            btn.style.color = "white";
             btn.onclick = handleRedeem; 
         } else {
-            // 狀態：未完成 -> 灰色按鈕
             btn.innerText = `需完成任務 (${finishedCount}/4)`;
             btn.disabled = true;
             btn.style.backgroundColor = "#ccc";
-            btn.style.color = "#666";
             btn.onclick = null;
         }
     }
 }
 
-/* --- 4. 登錄與 API 審核邏輯 --- */
+/* --- 4. 登錄邏輯：精準審核兌換狀態 --- */
 async function initUser() {
     const phoneInput = document.getElementById('userPhoneInput');
     const phone = phoneInput.value.trim();
@@ -472,20 +465,20 @@ async function initUser() {
     btn.disabled = true;
 
     try {
-        // A. 紀錄「遊戲登錄」
+        // 先紀錄一筆登錄行為 (不影響兌換狀態)
         hiddenSubmit(phone, "遊戲登錄");
 
-        // B. 向 GAS API 進行精準審核 (檢查是否已有「兌換完成」紀錄)
+        // 向 GAS API 查詢此號碼是否「兌換完成」
         const response = await fetch(`${CHECK_API_URL}?phone=${phone}&t=${Date.now()}`);
         const result = await response.json();
         
         if (result.exists) {
             localStorage.setItem('redeemed_' + phone, 'true');
-            gameProgress = { q1: true, q2: true, q3: true, q4: true }; // 已兌換者強制視為全過
+            gameProgress = { q1: true, q2: true, q3: true, q4: true };
             alert("此號碼已完成兌換，將為您導向問卷頁面。");
         } else {
             localStorage.removeItem('redeemed_' + phone);
-            // 只有新玩家需要重新開始
+            // 新用戶或未兌換用戶才重置本地進度
             if (!localStorage.getItem('temp_progress')) {
                 gameProgress = { q1: false, q2: false, q3: false, q4: false };
             }
@@ -495,10 +488,7 @@ async function initUser() {
     } finally {
         localStorage.setItem('currentPhone', phone);
         document.getElementById('phoneModal').style.display = 'none';
-        
         checkAllLevelsCleared(); 
-        
-        // 若已兌換，自動顯示回饋頁
         if (localStorage.getItem('redeemed_' + phone) === 'true') {
              document.getElementById('feedbackPage').style.display = 'block';
         }
@@ -506,7 +496,7 @@ async function initUser() {
     }
 }
 
-/* --- 5. 兌換視窗與提交流程 --- */
+/* --- 5. 兌換視窗與重複提交攔截 --- */
 function handleRedeem() { 
     const modal = document.getElementById('confirmModal');
     if (modal) modal.style.display = 'flex'; 
@@ -520,17 +510,22 @@ function executeRedeem() {
     const phone = localStorage.getItem('currentPhone');
     if (!phone) return alert("資訊遺失");
 
+    // 重複提交攔截：若本地標記已兌換，直接跳轉不寫入後台
+    if (localStorage.getItem('redeemed_' + phone) === 'true') {
+        closeConfirm();
+        document.getElementById('feedbackPage').style.display = 'block';
+        return;
+    }
+
     const btn = document.getElementById('redeemBtn');
     if (btn) { btn.innerText = "紀錄提交中..."; btn.disabled = true; }
 
-    // 1. 幕後提交「兌換完成」
+    // 只有第一次兌換會執行 hiddenSubmit
     hiddenSubmit(phone, "兌換完成");
 
-    // 2. 延遲同步 UI，確保資料送出
     setTimeout(() => {
         localStorage.setItem('redeemed_' + phone, 'true');
-        localStorage.removeItem('temp_progress'); // 成功後清除暫存進度
-        
+        localStorage.removeItem('temp_progress'); 
         checkAllLevelsCleared(); 
         closeConfirm();
         alert('兌換成功！');
@@ -538,7 +533,7 @@ function executeRedeem() {
     }, 1200); 
 }
 
-/* --- 6. 通用穩定提交函式 (隱藏 iframe) --- */
+/* --- 6. 通用穩定提交函式 --- */
 function hiddenSubmit(phone, action) {
     const iframeName = "hidden_iframe_" + Date.now();
     const iframe = document.createElement("iframe");
