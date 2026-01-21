@@ -379,7 +379,7 @@
         </div>
     </div>
 </div>
-    <!-- 回饋表單新畫面層 -->
+  
 <!-- 回饋表單新畫面層 -->
 <div id="feedbackPage" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #b22020; z-index: 5000;">
     <!-- 頂部關閉導覽列 -->
@@ -405,26 +405,30 @@ const CHECK_API_URL = "https://script.google.com/macros/s/AKfycbxkF94-7CGRp-7-Xp
 
 // 遊戲進度狀態
 let gameProgress = { q1: false, q2: false, q3: false, q4: false };
-
+/* --- 2. 初始化流程 --- */
 window.onload = () => {
+    // 1. 強制滾動到最上方並彈出手機號輸入框
     window.scrollTo(0, 0);
-    // 強制彈出輸入手機號
-    document.getElementById('phoneModal').style.display = 'flex';
+    document.getElementById('phoneModal').style.display = 'flex'; 
     
+    // 2. 自動回填上次輸入的手機號
     const lastPhone = localStorage.getItem('currentPhone');
     if (lastPhone) {
         document.getElementById('userPhoneInput').value = lastPhone;
     }
-    checkAllLevelsCleared(); // 初始化按鈕狀態
+    
+    // 3. 初始化按鈕顯示狀態
+    checkAllLevelsCleared();
 };
 
-/* --- 2. 核心檢查邏輯：確保 4 關完成才能兌換 --- */
+/* --- 3. 核心檢查邏輯：完成 4 關才能點擊兌換 --- */
 function checkAllLevelsCleared() {
     const btn = document.getElementById('redeemBtn');
     if (!btn) return;
 
     const phone = localStorage.getItem('currentPhone');
-    // 如果還沒輸入手機號，按鈕先顯示初始狀態
+    
+    // 尚未登入時的按鈕狀態
     if (!phone) {
         btn.innerText = "請先登錄手機號";
         btn.disabled = true;
@@ -435,26 +439,26 @@ function checkAllLevelsCleared() {
     const isRedeemed = localStorage.getItem('redeemed_' + phone) === 'true';
 
     if (isRedeemed) {
-        // 狀態 A：已兌換完畢 -> 導向問卷
+        // 已兌換：變更為問卷模式
         btn.innerText = "填寫問卷回饋";
         btn.disabled = false;
         btn.style.backgroundColor = "#3a2301"; 
         btn.style.color = "white";
         btn.onclick = () => document.getElementById('feedbackPage').style.display = 'block';
     } else {
-        // 狀態 B：未兌換 -> 檢查關卡進度
+        // 計算完成關卡數
         const finishedCount = Object.values(gameProgress).filter(v => v === true).length;
         
         if (finishedCount === 4) {
-            // 解鎖兌換
+            // 四關全開：解鎖兌換按鈕
             btn.innerText = "領取兌換券";
             btn.disabled = false;
             btn.style.backgroundColor = "#e99e9d";
             btn.style.color = "white";
-            btn.onclick = handleRedeem; // 開啟二次確認視窗
+            btn.onclick = handleRedeem; 
         } else {
-            // 進度不足：禁用按鈕
-            btn.innerText = `任務進度 (${finishedCount}/4)`;
+            // 關卡未完成：按鈕禁用且顯示進度
+            btn.innerText = `需完成任務 (${finishedCount}/4)`;
             btn.disabled = true;
             btn.style.backgroundColor = "#ccc";
             btn.style.color = "#666";
@@ -463,7 +467,7 @@ function checkAllLevelsCleared() {
     }
 }
 
-/* --- 3. 登錄與後台連動 --- */
+/* --- 4. 登錄與 API 查詢邏輯 --- */
 async function initUser() {
     const phoneInput = document.getElementById('userPhoneInput');
     const phone = phoneInput.value.trim();
@@ -474,91 +478,28 @@ async function initUser() {
     btn.innerText = "查詢中...";
     btn.disabled = true;
 
- window.onload = () => {
-    window.scrollTo(0, 0);
-    document.getElementById('phoneModal').style.display = 'flex'; // 強制彈窗
-    
-    const lastPhone = localStorage.getItem('currentPhone');
-    if (lastPhone) {
-        document.getElementById('userPhoneInput').value = lastPhone;
-    }
-    checkAllLevelsCleared(); // 初始檢查按鈕狀態
-};
-
-/* --- 3. 核心邏輯：介面更新與關卡鎖定 --- */
-function checkAllLevelsCleared() {
-    const btn = document.getElementById('redeemBtn');
-    if (!btn) return;
-
-    const phone = localStorage.getItem('currentPhone');
-    if (!phone) {
-        btn.innerText = "請先登錄手機號";
-        btn.disabled = true;
-        btn.style.backgroundColor = "#ccc";
-        return;
-    }
-
-    const isRedeemed = localStorage.getItem('redeemed_' + phone) === 'true';
-
-    if (isRedeemed) {
-        // 狀態 A: 已兌換 -> 顯示問卷按鈕
-        btn.innerText = "填寫問卷回饋";
-        btn.disabled = false;
-        btn.style.backgroundColor = "#3a2301"; 
-        btn.onclick = () => document.getElementById('feedbackPage').style.display = 'block';
-    } else {
-        // 狀態 B: 未兌換 -> 檢查關卡進度
-        const finishedCount = Object.values(gameProgress).filter(v => v === true).length;
-        
-        if (finishedCount === 4) {
-            // 滿 4 關 -> 解鎖兌換按鈕
-            btn.innerText = "領取兌換券";
-            btn.disabled = false;
-            btn.style.backgroundColor = "#e99e9d";
-            btn.onclick = handleRedeem; // 指向開啟確認彈窗
-        } else {
-            // 不足 4 關 -> 禁用按鈕並顯示進度
-            btn.innerText = `需完成任務 (${finishedCount}/4)`;
-            btn.disabled = true;
-            btn.style.backgroundColor = "#ccc";
-            btn.onclick = null;
-        }
-    }
-}
-
-/* --- 4. 登錄流程 (記錄進站與檢查是否已兌換) --- */
-async function initUser() {
-    const phoneInput = document.getElementById('userPhoneInput');
-    const phone = phoneInput.value.trim();
-    const btn = document.querySelector("#phoneModal .btn-check");
-    
-    if (!/^09\d{8}$/.test(phone)) return alert("請輸入正確的手機號格式");
-
-    btn.innerText = "查詢中...";
-    btn.disabled = true;
-
     try {
-        // 使用隱藏表單提交 (解決 fetch no-cors 收不到手機號的問題)
+        // 紀錄登錄行為到 Google 表單
         hiddenSubmit(phone, "登錄遊戲");
 
-        // 異步查詢後台 API 狀態
+        // 查詢後台 GAS 該手機號是否已兌換過
         const response = await fetch(`${CHECK_API_URL}?phone=${phone}`);
         const result = await response.json();
-        if (result.exists) localStorage.setItem('redeemed_' + phone, 'true');
-
+        if (result.exists) {
+            localStorage.setItem('redeemed_' + phone, 'true');
+        }
     } catch (e) {
-        console.warn("API 連線異常，不影響前端流程");
+        console.warn("API 查詢失敗，切換至本地紀錄模式");
     } finally {
         localStorage.setItem('currentPhone', phone);
         document.getElementById('phoneModal').style.display = 'none';
         window.scrollTo(0, 0); 
-        checkAllLevelsCleared(); // 更新按鈕狀態
+        checkAllLevelsCleared();
     }
 }
 
-/* --- 5. 兌換流程與提交邏輯 --- */
+/* --- 5. 兌換確認與提交 --- */
 function handleRedeem() { 
-    // 開啟「工作人員操作」確認彈窗
     document.getElementById('confirmModal').style.display = 'flex'; 
 }
 
@@ -568,24 +509,23 @@ function closeConfirm() {
 
 function executeRedeem() {
     const phone = localStorage.getItem('currentPhone');
-    if (!phone) return alert("資訊遺失，請重新整理頁面");
+    if (!phone) return alert("資訊遺失，請重新登入");
 
-    // 提交「完成兌換」紀錄至 Google 表單後台
+    // 提交「完成兌換」到 Google 表單 (確保後台收到手機號)
     hiddenSubmit(phone, "完成兌換");
 
-    // 更新本地狀態
+    // 更新本地狀態防止重複兌換
     localStorage.setItem('redeemed_' + phone, 'true');
     
-    // UI 反饋與導向回饋頁
     setTimeout(() => {
-        checkAllLevelsCleared(); // 按鈕變為「填寫問卷」
+        checkAllLevelsCleared(); 
         closeConfirm();
-        alert('兌換成功！請向工作人員出示畫面。');
+        alert('兌換成功！請向現場工作人員出示此畫面。');
         document.getElementById('feedbackPage').style.display = 'block';
     }, 800);
 }
 
-/* --- 6. 通用隱藏提交輔助函式 (穩定傳送數據至 Google Form) --- */
+/* --- 6. 通用提交函式 (使用隱藏 iframe 防止跳轉) --- */
 function hiddenSubmit(phone, action) {
     const iframeName = "hidden_iframe_" + Date.now();
     const iframe = document.createElement("iframe");
@@ -612,13 +552,12 @@ function hiddenSubmit(phone, action) {
     document.body.appendChild(form);
     form.submit();
 
+    // 提交後定時清理元素
     setTimeout(() => {
-        // 提交後清理臨時生成的表單和 iframe
-        document.body.removeChild(form);
-        document.body.removeChild(iframe);
-    }, 1000);
+        if (document.body.contains(form)) document.body.removeChild(form);
+        if (document.body.contains(iframe)) document.body.removeChild(iframe);
+    }, 1500);
 }
-
 
 function checkAnswer() {
     if (document.getElementById('quizInput').value === "13") {
