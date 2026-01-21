@@ -403,25 +403,22 @@ const PHONE_ENTRY = "entry.1545230275";
 const ACTION_ENTRY = "entry.467030123";  
 const CHECK_API_URL = "https://script.google.com/macros/s/AKfycbzZpnQv3ceKQKtuz7Y02m_NYxil0uG9jUJRmYreqkLP-vk3IJH4wDw8q5sHjXyydiVt/exec"; 
 
+/* --- 1. 進度與配置 --- */
 let gameProgress = JSON.parse(localStorage.getItem('temp_progress')) || { q1: false, q2: false, q3: false, q4: false };
 
-/* --- 2. 初始化流程 --- */
 window.onload = () => {
     window.scrollTo(0, 0);
     const modal = document.getElementById('phoneModal');
     if (modal) modal.style.display = 'flex';
-    
     const lastPhone = localStorage.getItem('currentPhone');
     if (lastPhone) document.getElementById('userPhoneInput').value = lastPhone;
-    
     checkAllLevelsCleared();
 };
 
-/* --- 3. 核心邏輯：按鈕狀態與進度檢查 --- */
+/* --- 2. 核心邏輯：按鈕狀態與進度檢查 --- */
 function checkAllLevelsCleared() {
     const btn = document.getElementById('redeemBtn');
     if (!btn) return;
-
     const phone = localStorage.getItem('currentPhone');
     if (!phone) {
         btn.innerText = "請登錄遊戲";
@@ -429,9 +426,7 @@ function checkAllLevelsCleared() {
         btn.style.backgroundColor = "#ccc";
         return;
     }
-
     const isRedeemed = localStorage.getItem('redeemed_' + phone) === 'true';
-
     if (isRedeemed) {
         btn.innerText = "填寫問卷回饋";
         btn.disabled = false;
@@ -448,23 +443,24 @@ function checkAllLevelsCleared() {
             btn.innerText = `需完成任務 (${finishedCount}/4)`;
             btn.disabled = true;
             btn.style.backgroundColor = "#ccc";
-            btn.onclick = null;
         }
     }
 }
 
-/* --- 4. 登錄邏輯：精準審核兌換狀態 --- */
+/* --- 3. 登錄邏輯：精準審核並紀錄登錄 --- */
 async function initUser() {
     const phoneInput = document.getElementById('userPhoneInput');
     const phone = phoneInput.value.trim();
     const btn = document.querySelector("#phoneModal .btn-check");
-    
     if (!/^09\d{8}$/.test(phone)) return alert("格式錯誤");
     btn.innerText = "驗證中...";
     btn.disabled = true;
 
     try {
-        // 僅查詢狀態，不寫入
+        // A. 透過 Google Form 紀錄登錄 (這會產生新的一行，動作為「遊戲登錄」)
+        hiddenSubmit(phone, "遊戲登錄");
+
+        // B. 呼叫 GAS 查詢是否已兌換
         const response = await fetch(`${CHECK_API_URL}?phone=${phone}&action=check&t=${Date.now()}`);
         const result = await response.json();
         
@@ -474,6 +470,7 @@ async function initUser() {
             alert("偵測到此號碼已完成兌換。");
         } else {
             localStorage.removeItem('redeemed_' + phone);
+            // 只有全新號碼才重置進度
             if (!localStorage.getItem('temp_progress')) {
                 gameProgress = { q1: false, q2: false, q3: false, q4: false };
             }
@@ -486,23 +483,15 @@ async function initUser() {
         if (localStorage.getItem('redeemed_' + phone) === 'true') {
              document.getElementById('feedbackPage').style.display = 'block';
         }
+        window.scrollTo(0, 0);
     }
 }
-/* --- 5. 兌換視窗與重複提交攔截 --- */
-function handleRedeem() { 
-    const modal = document.getElementById('confirmModal');
-    if (modal) modal.style.display = 'flex'; 
-}
 
-function closeConfirm() { 
-    document.getElementById('confirmModal').style.display = 'none'; 
-}
-
+/* --- 4. 兌換提交：將「遊戲登錄」更新為「兌換完成」 --- */
 async function executeRedeem() {
     const phone = localStorage.getItem('currentPhone');
     if (!phone) return alert("資訊遺失");
 
-    // 1. 攔截重複提交：若本地已兌換，直接跳轉
     if (localStorage.getItem('redeemed_' + phone) === 'true') {
         closeConfirm();
         document.getElementById('feedbackPage').style.display = 'block';
@@ -510,60 +499,53 @@ async function executeRedeem() {
     }
 
     const btn = document.getElementById('redeemBtn');
-    if (btn) { btn.innerText = "更新後台紀錄..."; btn.disabled = true; }
+    if (btn) { btn.innerText = "更新中..."; btn.disabled = true; }
 
     try {
-        // 2. 呼叫 GAS API 更新狀態為「兌換完成」
-        // 這會將原本的「遊戲登錄」那一列更新，或新增一列
+        // C. 呼叫 GAS 更新該號碼的最末筆紀錄為「兌換完成」
         const response = await fetch(`${CHECK_API_URL}?phone=${phone}&action=update&t=${Date.now()}`);
         const result = await response.json();
 
         if (result.success) {
             localStorage.setItem('redeemed_' + phone, 'true');
             localStorage.removeItem('temp_progress'); 
-            
             checkAllLevelsCleared(); 
             closeConfirm();
-            alert('兌換成功！後台紀錄已更新。');
+            alert('兌換成功！');
             document.getElementById('feedbackPage').style.display = 'block';
         }
     } catch (e) {
-        alert("網路異常，請稍後再試");
+        alert("網路異常");
         if (btn) { btn.innerText = "領取兌換券"; btn.disabled = false; }
     }
+}
 
-/* --- 6. 通用穩定提交函式 --- */
+/* --- 5. 輔助函式 --- */
+function handleRedeem() { document.getElementById('confirmModal').style.display = 'flex'; }
+function closeConfirm() { document.getElementById('confirmModal').style.display = 'none'; }
+
 function hiddenSubmit(phone, action) {
     const iframeName = "hidden_iframe_" + Date.now();
     const iframe = document.createElement("iframe");
-    iframe.name = iframeName;
-    iframe.style.display = "none";
+    iframe.name = iframeName; iframe.style.display = "none";
     document.body.appendChild(iframe);
-
     const form = document.createElement("form");
-    form.target = iframeName;
-    form.action = FORM_URL;
-    form.method = "POST";
-    form.enctype = "application/x-www-form-urlencoded";
-
+    form.target = iframeName; form.action = FORM_URL; form.method = "POST";
     const addField = (name, value) => {
         const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = name;
-        input.value = value;
+        input.type = "hidden"; input.name = name; input.value = value;
         form.appendChild(input);
     };
-
     addField(PHONE_ENTRY, phone);
     addField(ACTION_ENTRY, action);
-
     document.body.appendChild(form);
     setTimeout(() => { form.submit(); }, 100);
     setTimeout(() => {
-        if (document.body.contains(form)) document.body.removeChild(form);
-        if (document.body.contains(iframe)) document.body.removeChild(iframe);
+        document.body.removeChild(form);
+        document.body.removeChild(iframe);
     }, 2500);
 }
+
     
 function checkAnswer() {
     if (document.getElementById('quizInput').value === "13") {
