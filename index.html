@@ -401,7 +401,7 @@
 const FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdpnvMA2aDoBGPkT4kXU1CR_EPJ0lvsY0m3VOwVsmEa2wOaMw/formResponse";
 const PHONE_ENTRY = "entry.1545230275"; 
 const ACTION_ENTRY = "entry.467030123";  
-const CHECK_API_URL = "https://script.google.com/macros/s/AKfycbzZpnQv3ceKQKtuz7Y02m_NYxil0uG9jUJRmYreqkLP-vk3IJH4wDw8q5sHjXyydiVt/exec"; 
+const CHECK_API_URL = "https://script.google.com/macros/s/AKfycbzVt9dgG4X-304bG7ASk6ttedwXEBB-tYT4fGNzdDYyH89F4nOrldRPB3p1xg3c1p2H/exec"; 
 
 /* --- 1. 進度與配置 --- */
 let gameProgress = JSON.parse(localStorage.getItem('temp_progress')) || { q1: false, q2: false, q3: false, q4: false };
@@ -490,33 +490,25 @@ async function initUser() {
 /* --- 4. 兌換提交：將「遊戲登錄」更新為「兌換完成」 --- */
 async function executeRedeem() {
     const phone = localStorage.getItem('currentPhone');
-    if (!phone) return alert("資訊遺失");
-
-    if (localStorage.getItem('redeemed_' + phone) === 'true') {
-        closeConfirm();
-        document.getElementById('feedbackPage').style.display = 'block';
-        return;
-    }
-
     const btn = document.getElementById('redeemBtn');
-    if (btn) { btn.innerText = "更新中..."; btn.disabled = true; }
-
+    
     try {
-        // C. 呼叫 GAS 更新該號碼的最末筆紀錄為「兌換完成」
+        // 確保網址開頭是 https://script.google.com...
         const response = await fetch(`${CHECK_API_URL}?phone=${phone}&action=update&t=${Date.now()}`);
+        
+        // 如果 response.ok 為 false，會直接跳到 catch 顯示網路異常
+        if (!response.ok) throw new Error('網路回應不正常');
+        
         const result = await response.json();
-
         if (result.success) {
             localStorage.setItem('redeemed_' + phone, 'true');
-            localStorage.removeItem('temp_progress'); 
-            checkAllLevelsCleared(); 
-            closeConfirm();
             alert('兌換成功！');
+            checkAllLevelsCleared();
             document.getElementById('feedbackPage').style.display = 'block';
         }
     } catch (e) {
-        alert("網路異常");
-        if (btn) { btn.innerText = "領取兌換券"; btn.disabled = false; }
+        console.error(e);
+        alert("網路異常：請檢查 API 網址是否正確部署為「所有人」存取。");
     }
 }
 
