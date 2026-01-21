@@ -522,6 +522,8 @@ function hiddenSubmit(phone, action) {
     form.target = iframeName;
     form.action = FORM_URL;
     form.method = "POST";
+    // 增加編碼宣告
+    form.enctype = "application/x-www-form-urlencoded";
 
     const addField = (name, value) => {
         const input = document.createElement("input");
@@ -535,13 +537,16 @@ function hiddenSubmit(phone, action) {
     addField(ACTION_ENTRY, action);
 
     document.body.appendChild(form);
-    form.submit();
-
-    // 延遲刪除確保資料已發出
+    
+    // 增加一個簡單的延遲確保 iframe 已掛載
     setTimeout(() => {
-        document.body.removeChild(form);
-        document.body.removeChild(iframe);
-    }, 2000);
+        form.submit();
+    }, 100);
+
+    setTimeout(() => {
+        if (document.body.contains(form)) document.body.removeChild(form);
+        if (document.body.contains(iframe)) document.body.removeChild(iframe);
+    }, 2500); // 清理時間稍微拉長
 }
 function checkAnswer() {
     if (document.getElementById('quizInput').value === "13") {
