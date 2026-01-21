@@ -465,20 +465,42 @@ async function initUser() {
     btn.innerText = "查詢中...";
     btn.disabled = true;
 
-    try {
-        hiddenSubmit(phone, "登錄遊戲"); // 紀錄進站
+    // --- 新增：重設遊戲狀態 (防止舊進度干擾新號碼) ---
+    gameProgress = { q1: false, q2: false, q3: false, q4: false };
+    // 隱藏所有過關畫面 (視您的 HTML ID 而定)
+    for(let i=1; i<=4; i++) {
+        const content = document.getElementById(`success-content${i === 1 ? '' : i}`);
+        if(content) content.style.display = 'none';
+    }
 
+    try {
+        // 紀錄進站
+        hiddenSubmit(phone, "登錄遊戲");
+
+        // 查詢此新號碼是否已兌換
         const response = await fetch(`${CHECK_API_URL}?phone=${phone}`);
         const result = await response.json();
-        if (result.exists) localStorage.setItem('redeemed_' + phone, 'true');
+        
+        if (result.exists) {
+            localStorage.setItem('redeemed_' + phone, 'true');
+        } else {
+            // 重要：如果是新號碼且未兌換，確保清除可能殘留的標記
+            localStorage.removeItem('redeemed_' + phone);
+        }
     } catch (e) {
-        console.warn("API 離線");
+        console.warn("API 查詢異常");
     } finally {
         localStorage.setItem('currentPhone', phone);
         document.getElementById('phoneModal').style.display = 'none';
-        checkAllLevelsCleared();
+        
+        // 確保回饋頁面是關閉的
+        document.getElementById('feedbackPage').style.display = 'none';
+        
+        window.scrollTo(0, 0); 
+        checkAllLevelsCleared(); // 刷新按鈕，此時應該會變回「任務進度 (0/4)」
     }
 }
+
 
 /* --- 5. 兌換流程與彈窗 --- */
 function handleRedeem() { 
