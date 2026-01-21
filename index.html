@@ -515,12 +515,10 @@ function closeConfirm() {
 
 function executeRedeem() {
     const phone = localStorage.getItem('currentPhone');
-    if (!phone) return alert("資訊遺失");
-
-    // 重複提交攔截：若本地標記已兌換，直接跳轉不寫入後台
+    // 如果本地標記已兌換，絕對不執行 hiddenSubmit
     if (localStorage.getItem('redeemed_' + phone) === 'true') {
+        alert("此號碼已在後台完成紀錄，不需重複提交。");
         closeConfirm();
-        document.getElementById('feedbackPage').style.display = 'block';
         return;
     }
 
