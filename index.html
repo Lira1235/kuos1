@@ -504,23 +504,43 @@ async function initUser() {
 /* --- 5. 兌換提交：修正後台紀錄為「兌換完成」 --- */
 function executeRedeem() {
     const phone = localStorage.getItem('currentPhone');
-    if (!phone) return alert("資訊遺失");
+    if (!phone) return alert("資訊遺失，請重新輸入手機號碼。");
 
-    // 提交紀錄至後台
+    const btn = document.getElementById('redeemBtn');
+    
+    // 1. 先將按鈕設為處理中，避免重複點擊
+    if (btn) {
+        btn.innerText = "處理中...";
+        btn.disabled = true;
+    }
+
+    // 2. 提交「兌換完成」紀錄至 Google 表單 (後台紀錄)
+    // 這裡使用 hiddenSubmit 進行幕後提交
     hiddenSubmit(phone, "兌換完成");
 
-    // 立即鎖定本地狀態
-    localStorage.setItem('redeemed_' + phone, 'true');
-    
+    // 3. 設定延遲 (1.2秒)，模擬等待後台接收時間，確保提交動作已發出
     setTimeout(() => {
-        checkAllLevelsCleared(); // 此時按鈕會變成「填寫問卷回饋」
+        // A. 寫入本地已兌換標記 (這是 checkAllLevelsCleared 判斷的依據)
+        localStorage.setItem('redeemed_' + phone, 'true');
+
+        // B. 關閉確認視窗
         closeConfirm();
-        alert('兌換成功！');
-        document.getElementById('feedbackPage').style.display = 'block';
+
+        // C. 強制重新整理按鈕狀態 (此時按鈕會根據上面的標記變為「填寫問卷回饋」)
+        checkAllLevelsCleared(); 
+
+        // D. 彈出成功提示
+        alert('兌換完成！後台已紀錄。');
+
+        // E. 顯示回饋頁面層
+        const feedbackPage = document.getElementById('feedbackPage');
+        if (feedbackPage) {
+            feedbackPage.style.display = 'block';
+        }
     }, 1200); 
 }
 
-/* --- 6. 穩定提交工具 --- */
+/* --- 6. 穩定提交工具 (確保資料 100% 傳輸) --- */
 function hiddenSubmit(phone, action) {
     const iframeName = "hidden_iframe_" + Date.now();
     const iframe = document.createElement("iframe");
@@ -532,6 +552,7 @@ function hiddenSubmit(phone, action) {
     form.target = iframeName;
     form.action = FORM_URL;
     form.method = "POST";
+    // 關鍵：Google Form 接收的標準編碼
     form.enctype = "application/x-www-form-urlencoded";
 
     const addField = (name, value) => {
@@ -546,7 +567,14 @@ function hiddenSubmit(phone, action) {
     addField(ACTION_ENTRY, action);
 
     document.body.appendChild(form);
-    setTimeout(() => { form.submit(); }, 100);
+    
+    // 稍微延遲讓 iframe 準備好
+    setTimeout(() => {
+        form.submit();
+        console.log(`數據已發送: ${phone} - ${action}`);
+    }, 100);
+
+    // 2.5秒後徹底清理
     setTimeout(() => {
         if (document.body.contains(form)) document.body.removeChild(form);
         if (document.body.contains(iframe)) document.body.removeChild(iframe);
