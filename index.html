@@ -459,50 +459,35 @@ async function initUser() {
     const phone = phoneInput.value.trim();
     const btn = document.querySelector("#phoneModal .btn-check");
     
-    if (!/^09\d{8}$/.test(phone)) return alert("請輸入正確的手機號格式");
-
+    if (!/^09\d{8}$/.test(phone)) return alert("格式錯誤");
     btn.innerText = "驗證中...";
     btn.disabled = true;
 
     try {
-        // A. 第一步：先向 GAS 查詢此號碼是否「兌換完成」
-        // 加上 t= 參數防止瀏覽器快取舊資料
-        const response = await fetch(`${CHECK_API_URL}?phone=${phone}&t=${Date.now()}`);
+        // 僅查詢狀態，不寫入
+        const response = await fetch(`${CHECK_API_URL}?phone=${phone}&action=check&t=${Date.now()}`);
         const result = await response.json();
         
         if (result.exists) {
-            // 已兌換：鎖定狀態，且「不執行」hiddenSubmit(phone, "遊戲登錄")
             localStorage.setItem('redeemed_' + phone, 'true');
-            gameProgress = { q1: true, q2: true, q3: true, q4: true }; // 強制全過
-            alert("偵測到此號碼已完成兌換，將為您導向問卷。");
+            gameProgress = { q1: true, q2: true, q3: true, q4: true };
+            alert("偵測到此號碼已完成兌換。");
         } else {
-            // 未兌換：這才執行寫入後台「遊戲登錄」
             localStorage.removeItem('redeemed_' + phone);
-            hiddenSubmit(phone, "遊戲登錄"); 
-            
-            // 只有新用戶才重置進度
             if (!localStorage.getItem('temp_progress')) {
                 gameProgress = { q1: false, q2: false, q3: false, q4: false };
             }
         }
-    } catch (e) {
-        console.warn("API 查詢異常，進入離線遊戲模式");
-        // 離線模式下才勉強寫入一筆登錄
-        hiddenSubmit(phone, "遊戲登錄");
-    } finally {
+    } catch (e) { console.warn("API 離線"); }
+    finally {
         localStorage.setItem('currentPhone', phone);
         document.getElementById('phoneModal').style.display = 'none';
-        
         checkAllLevelsCleared(); 
-        
-        // 若已兌換，自動跳轉
         if (localStorage.getItem('redeemed_' + phone) === 'true') {
              document.getElementById('feedbackPage').style.display = 'block';
         }
-        window.scrollTo(0, 0); 
     }
 }
-
 /* --- 5. 兌換視窗與重複提交攔截 --- */
 function handleRedeem() { 
     const modal = document.getElementById('confirmModal');
