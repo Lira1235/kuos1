@@ -418,118 +418,101 @@ window.onload = () => {
     checkAllLevelsCleared(); // 初始化按鈕狀態
 };
 
-/* --- 2. 核心檢查邏輯：完成4關卡才能兌換 --- */
+/* --- 2. 核心檢查邏輯：確保 4 關完成才能兌換 --- */
 function checkAllLevelsCleared() {
     const btn = document.getElementById('redeemBtn');
+    if (!btn) return;
+
     const phone = localStorage.getItem('currentPhone');
-    if (!phone) return;
+    // 如果還沒輸入手機號，按鈕先顯示初始狀態
+    if (!phone) {
+        btn.innerText = "請先登錄手機號";
+        btn.disabled = true;
+        btn.style.backgroundColor = "#ccc";
+        return;
+    }
 
     const isRedeemed = localStorage.getItem('redeemed_' + phone) === 'true';
 
     if (isRedeemed) {
-        // 已兌換狀態
+        // 狀態 A：已兌換完畢 -> 導向問卷
         btn.innerText = "填寫問卷回饋";
         btn.disabled = false;
         btn.style.backgroundColor = "#3a2301"; 
+        btn.style.color = "white";
         btn.onclick = () => document.getElementById('feedbackPage').style.display = 'block';
     } else {
-        // 計算完成關卡數
+        // 狀態 B：未兌換 -> 檢查關卡進度
         const finishedCount = Object.values(gameProgress).filter(v => v === true).length;
         
         if (finishedCount === 4) {
-            // 只有滿 4 關才能點擊
+            // 解鎖兌換
             btn.innerText = "領取兌換券";
             btn.disabled = false;
             btn.style.backgroundColor = "#e99e9d";
-            btn.onclick = handleRedeem;
+            btn.style.color = "white";
+            btn.onclick = handleRedeem; // 開啟二次確認視窗
         } else {
-            // 否則禁用並顯示進度
-            btn.innerText = `需完成任務 (${finishedCount}/4)`;
+            // 進度不足：禁用按鈕
+            btn.innerText = `任務進度 (${finishedCount}/4)`;
             btn.disabled = true;
             btn.style.backgroundColor = "#ccc";
+            btn.style.color = "#666";
             btn.onclick = null;
         }
     }
 }
 
-/* --- 3. 後台紀錄與兌換邏輯 --- */
+/* --- 3. 登錄與後台連動 --- */
 async function initUser() {
     const phoneInput = document.getElementById('userPhoneInput');
-    const phone = phoneInput.value;
+    const phone = phoneInput.value.trim();
     const btn = document.querySelector("#phoneModal .btn-check");
     
-    if (!/^09\d{8}$/.test(phone)) return alert("請輸入正確的手機號格式");
+    if (!/^09\d{8}$/.test(phone)) return alert("請輸入正確的手機號格式 (09xxxxxxxx)");
 
     btn.innerText = "查詢中...";
     btn.disabled = true;
 
     try {
-        // 紀錄進站
+        // 1. 提交「登錄遊戲」紀錄 (Hidden Form 確保 100% 成功)
         hiddenSubmit(phone, "登錄遊戲");
 
-        // 查詢是否已兌換過
+        // 2. 異步檢查 GAS 是否已有兌換紀錄
         const response = await fetch(`${CHECK_API_URL}?phone=${phone}`);
         const result = await response.json();
-        if (result.exists) localStorage.setItem('redeemed_' + phone, 'true');
-
+        if (result.exists) {
+            localStorage.setItem('redeemed_' + phone, 'true');
+        }
     } catch (e) {
-        console.warn("API 連線異常");
+        console.warn("後台查詢異常，改用本地紀錄模式");
     } finally {
+        // 3. 存入本地並關閉 Modal
         localStorage.setItem('currentPhone', phone);
         document.getElementById('phoneModal').style.display = 'none';
-        checkAllLevelsCleared();
+        window.scrollTo(0, 0); 
+        checkAllLevelsCleared(); // 立即刷新按鈕狀態
     }
 }
 
+/* --- 4. 兌換提交邏輯 --- */
 function executeRedeem() {
     const phone = localStorage.getItem('currentPhone');
-    if (!phone) return alert("請重新登入");
+    if (!phone) return alert("資訊遺失，請重新整理頁面");
 
-    // 提交「完成兌換」至 Google 表單 (解決後台收不到手機號問題)
+    // 提交「完成兌換」紀錄至 Google 表單
     hiddenSubmit(phone, "完成兌換");
 
-    // 更新本地狀態
+    // 標記本地狀態
     localStorage.setItem('redeemed_' + phone, 'true');
     
+    // UI 反饋
     setTimeout(() => {
         checkAllLevelsCleared(); 
         closeConfirm();
-        alert('兌換成功！');
+        alert('兌換成功！請向工作人員出示畫面。');
         document.getElementById('feedbackPage').style.display = 'block';
-    }, 500);
-}
-
-/* --- 通用隱藏提交函式 (穩定傳送數據) --- */
-function hiddenSubmit(phone, action) {
-    const iframeName = "hidden_iframe_" + Date.now();
-    const iframe = document.createElement("iframe");
-    iframe.name = iframeName;
-    iframe.style.display = "none";
-    document.body.appendChild(iframe);
-
-    const form = document.createElement("form");
-    form.target = iframeName;
-    form.action = FORM_URL;
-    form.method = "POST";
-
-    const addField = (name, value) => {
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = name;
-        input.value = value;
-        form.appendChild(input);
-    };
-
-    addField(PHONE_ENTRY, phone);
-    addField(ACTION_ENTRY, action);
-
-    document.body.appendChild(form);
-    form.submit();
-
-    setTimeout(() => {
-        document.body.removeChild(form);
-        document.body.removeChild(iframe);
-    }, 1000);
+    }, 800);
 }
 
 function checkAnswer() {
